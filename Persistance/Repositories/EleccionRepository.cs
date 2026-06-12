@@ -11,11 +11,10 @@ namespace Persistance.Repositories
         {
         }
 
-        public async Task<Eleccion> GetEleccionActivaAsync()
+        public async Task<Eleccion?> GetEleccionActivaAsync()
         {
-          
             return await _context.Set<Eleccion>()
-                .FirstOrDefaultAsync(e => e.EstadoEleccion == EstadoEleccion.Activa);
+                .FirstOrDefaultAsync(e => e.Estado);
         }
     }
 }
