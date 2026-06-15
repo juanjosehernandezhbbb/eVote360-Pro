@@ -1,6 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using Persistance.Entities;
+using Core.Entities;
 
 namespace Persistance.EntitiyConfiguration
 {

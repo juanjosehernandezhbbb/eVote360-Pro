@@ -22,7 +22,7 @@ namespace Persistance.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
-            modelBuilder.Entity("Persistance.Entities.Candidato", b =>
+            modelBuilder.Entity("Core.Entities.Candidato", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -58,7 +58,7 @@ namespace Persistance.Migrations
                     b.ToTable("Candidato", (string)null);
                 });
 
-            modelBuilder.Entity("Persistance.Entities.CandidatoPuesto", b =>
+            modelBuilder.Entity("Core.Entities.CandidatoPuesto", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -94,7 +94,7 @@ namespace Persistance.Migrations
                     b.ToTable("CandidatoPuesto", (string)null);
                 });
 
-            modelBuilder.Entity("Persistance.Entities.Ciudadano", b =>
+            modelBuilder.Entity("Core.Entities.Ciudadano", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -128,7 +128,7 @@ namespace Persistance.Migrations
                     b.ToTable("Ciudadano", (string)null);
                 });
 
-            modelBuilder.Entity("Persistance.Entities.CodigoVerificacion", b =>
+            modelBuilder.Entity("Core.Entities.CodigoVerificacion", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -164,7 +164,7 @@ namespace Persistance.Migrations
                     b.ToTable("CodigoVerificacion", (string)null);
                 });
 
-            modelBuilder.Entity("Persistance.Entities.DetalleVoto", b =>
+            modelBuilder.Entity("Core.Entities.DetalleVoto", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -192,7 +192,7 @@ namespace Persistance.Migrations
                     b.ToTable("DetalleVoto", (string)null);
                 });
 
-            modelBuilder.Entity("Persistance.Entities.DirigentePolitico", b =>
+            modelBuilder.Entity("Core.Entities.DirigentePolitico", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -215,7 +215,7 @@ namespace Persistance.Migrations
                     b.ToTable("DirigentePolitico", (string)null);
                 });
 
-            modelBuilder.Entity("Persistance.Entities.Eleccion", b =>
+            modelBuilder.Entity("Core.Entities.Eleccion", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -225,6 +225,9 @@ namespace Persistance.Migrations
 
                     b.Property<bool>("Estado")
                         .HasColumnType("bit");
+
+                    b.Property<int>("EstadoEleccion")
+                        .HasColumnType("int");
 
                     b.Property<DateTime>("Fecha")
                         .HasColumnType("datetime2");
@@ -240,7 +243,7 @@ namespace Persistance.Migrations
                     b.ToTable("Elecciones");
                 });
 
-            modelBuilder.Entity("Persistance.Entities.PartidoPolitico", b =>
+            modelBuilder.Entity("Core.Entities.PartidoPolitico", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -275,7 +278,7 @@ namespace Persistance.Migrations
                     b.ToTable("PartidoPolitico", (string)null);
                 });
 
-            modelBuilder.Entity("Persistance.Entities.PuestoElectivo", b =>
+            modelBuilder.Entity("Core.Entities.PuestoElectivo", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -299,7 +302,7 @@ namespace Persistance.Migrations
                     b.ToTable("PuestoElectivo", (string)null);
                 });
 
-            modelBuilder.Entity("Persistance.Entities.SolicitudAlianza", b =>
+            modelBuilder.Entity("Core.Entities.SolicitudAlianza", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -331,7 +334,7 @@ namespace Persistance.Migrations
                     b.ToTable("SolicitudAlianza", (string)null);
                 });
 
-            modelBuilder.Entity("Persistance.Entities.Usuario", b =>
+            modelBuilder.Entity("Core.Entities.Usuario", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -381,7 +384,7 @@ namespace Persistance.Migrations
                     b.ToTable("Usuario", (string)null);
                 });
 
-            modelBuilder.Entity("Persistance.Entities.VotacionCiudadano", b =>
+            modelBuilder.Entity("Core.Entities.VotacionCiudadano", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -415,7 +418,7 @@ namespace Persistance.Migrations
                     b.ToTable("VotacionCiudadano", (string)null);
                 });
 
-            modelBuilder.Entity("Persistance.Entities.Voto", b =>
+            modelBuilder.Entity("Core.Entities.Voto", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -446,9 +449,9 @@ namespace Persistance.Migrations
                     b.ToTable("Voto", (string)null);
                 });
 
-            modelBuilder.Entity("Persistance.Entities.Candidato", b =>
+            modelBuilder.Entity("Core.Entities.Candidato", b =>
                 {
-                    b.HasOne("Persistance.Entities.PartidoPolitico", "PartidoPolitico")
+                    b.HasOne("Core.Entities.PartidoPolitico", "PartidoPolitico")
                         .WithMany("Candidatos")
                         .HasForeignKey("PartidoPoliticoId")
                         .OnDelete(DeleteBehavior.Restrict)
@@ -457,21 +460,21 @@ namespace Persistance.Migrations
                     b.Navigation("PartidoPolitico");
                 });
 
-            modelBuilder.Entity("Persistance.Entities.CandidatoPuesto", b =>
+            modelBuilder.Entity("Core.Entities.CandidatoPuesto", b =>
                 {
-                    b.HasOne("Persistance.Entities.Candidato", "Candidato")
+                    b.HasOne("Core.Entities.Candidato", "Candidato")
                         .WithMany("CandidatoPuestos")
                         .HasForeignKey("CandidatoId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("Persistance.Entities.PartidoPolitico", "PartidoPolitico")
+                    b.HasOne("Core.Entities.PartidoPolitico", "PartidoPolitico")
                         .WithMany("CandidatoPuestos")
                         .HasForeignKey("PartidoPoliticoId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("Persistance.Entities.PuestoElectivo", "PuestoElectivo")
+                    b.HasOne("Core.Entities.PuestoElectivo", "PuestoElectivo")
                         .WithMany("CandidatoPuestos")
                         .HasForeignKey("PuestoElectivoId")
                         .OnDelete(DeleteBehavior.Restrict)
@@ -484,15 +487,15 @@ namespace Persistance.Migrations
                     b.Navigation("PuestoElectivo");
                 });
 
-            modelBuilder.Entity("Persistance.Entities.CodigoVerificacion", b =>
+            modelBuilder.Entity("Core.Entities.CodigoVerificacion", b =>
                 {
-                    b.HasOne("Persistance.Entities.Ciudadano", "Ciudadano")
+                    b.HasOne("Core.Entities.Ciudadano", "Ciudadano")
                         .WithMany("CodigosDeVerificacion")
                         .HasForeignKey("CiudadanoId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("Persistance.Entities.Eleccion", "Eleccion")
+                    b.HasOne("Core.Entities.Eleccion", "Eleccion")
                         .WithMany("CodigoVerificacion")
                         .HasForeignKey("EleccionId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -503,21 +506,21 @@ namespace Persistance.Migrations
                     b.Navigation("Eleccion");
                 });
 
-            modelBuilder.Entity("Persistance.Entities.DetalleVoto", b =>
+            modelBuilder.Entity("Core.Entities.DetalleVoto", b =>
                 {
-                    b.HasOne("Persistance.Entities.Candidato", "Candidato")
+                    b.HasOne("Core.Entities.Candidato", "Candidato")
                         .WithMany("Detalles")
                         .HasForeignKey("CandidatoId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("Persistance.Entities.PuestoElectivo", "PuestoElectivo")
+                    b.HasOne("Core.Entities.PuestoElectivo", "PuestoElectivo")
                         .WithMany("Detalles")
                         .HasForeignKey("PuestoElectivoId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("Persistance.Entities.Voto", "Voto")
+                    b.HasOne("Core.Entities.Voto", "Voto")
                         .WithMany("Detalles")
                         .HasForeignKey("VotoId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -530,15 +533,15 @@ namespace Persistance.Migrations
                     b.Navigation("Voto");
                 });
 
-            modelBuilder.Entity("Persistance.Entities.DirigentePolitico", b =>
+            modelBuilder.Entity("Core.Entities.DirigentePolitico", b =>
                 {
-                    b.HasOne("Persistance.Entities.PartidoPolitico", "PartidoPolitico")
+                    b.HasOne("Core.Entities.PartidoPolitico", "PartidoPolitico")
                         .WithMany("dirigentePoliticos")
                         .HasForeignKey("PartidoPoliticoId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("Persistance.Entities.Usuario", "Usuario")
+                    b.HasOne("Core.Entities.Usuario", "Usuario")
                         .WithMany("dirigentePoliticos")
                         .HasForeignKey("UsuarioId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -549,15 +552,15 @@ namespace Persistance.Migrations
                     b.Navigation("Usuario");
                 });
 
-            modelBuilder.Entity("Persistance.Entities.SolicitudAlianza", b =>
+            modelBuilder.Entity("Core.Entities.SolicitudAlianza", b =>
                 {
-                    b.HasOne("Persistance.Entities.PartidoPolitico", "PartidoReceptor")
+                    b.HasOne("Core.Entities.PartidoPolitico", "PartidoReceptor")
                         .WithMany("SolicitudesRecibidas")
                         .HasForeignKey("PartidoReceptorId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("Persistance.Entities.PartidoPolitico", "PartidoSolicitante")
+                    b.HasOne("Core.Entities.PartidoPolitico", "PartidoSolicitante")
                         .WithMany("SolicitudesEnviadas")
                         .HasForeignKey("PartidoSolicitanteId")
                         .OnDelete(DeleteBehavior.Restrict)
@@ -568,15 +571,15 @@ namespace Persistance.Migrations
                     b.Navigation("PartidoSolicitante");
                 });
 
-            modelBuilder.Entity("Persistance.Entities.VotacionCiudadano", b =>
+            modelBuilder.Entity("Core.Entities.VotacionCiudadano", b =>
                 {
-                    b.HasOne("Persistance.Entities.Ciudadano", "Ciudadano")
+                    b.HasOne("Core.Entities.Ciudadano", "Ciudadano")
                         .WithMany("VotacionesCiudadanos")
                         .HasForeignKey("CiudadanoId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("Persistance.Entities.Eleccion", "Eleccion")
+                    b.HasOne("Core.Entities.Eleccion", "Eleccion")
                         .WithMany("VotacionesCiudadanos")
                         .HasForeignKey("EleccionId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -587,19 +590,19 @@ namespace Persistance.Migrations
                     b.Navigation("Eleccion");
                 });
 
-            modelBuilder.Entity("Persistance.Entities.Voto", b =>
+            modelBuilder.Entity("Core.Entities.Voto", b =>
                 {
-                    b.HasOne("Persistance.Entities.Candidato", "Candidato")
+                    b.HasOne("Core.Entities.Candidato", "Candidato")
                         .WithMany()
                         .HasForeignKey("CandidatoId");
 
-                    b.HasOne("Persistance.Entities.Ciudadano", "Ciudadano")
+                    b.HasOne("Core.Entities.Ciudadano", "Ciudadano")
                         .WithMany("VotosCollection")
                         .HasForeignKey("CiudadanoId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("Persistance.Entities.Eleccion", "Eleccion")
+                    b.HasOne("Core.Entities.Eleccion", "Eleccion")
                         .WithMany("Votos")
                         .HasForeignKey("EleccionId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -612,14 +615,14 @@ namespace Persistance.Migrations
                     b.Navigation("Eleccion");
                 });
 
-            modelBuilder.Entity("Persistance.Entities.Candidato", b =>
+            modelBuilder.Entity("Core.Entities.Candidato", b =>
                 {
                     b.Navigation("CandidatoPuestos");
 
                     b.Navigation("Detalles");
                 });
 
-            modelBuilder.Entity("Persistance.Entities.Ciudadano", b =>
+            modelBuilder.Entity("Core.Entities.Ciudadano", b =>
                 {
                     b.Navigation("CodigosDeVerificacion");
 
@@ -628,7 +631,7 @@ namespace Persistance.Migrations
                     b.Navigation("VotosCollection");
                 });
 
-            modelBuilder.Entity("Persistance.Entities.Eleccion", b =>
+            modelBuilder.Entity("Core.Entities.Eleccion", b =>
                 {
                     b.Navigation("CodigoVerificacion");
 
@@ -637,7 +640,7 @@ namespace Persistance.Migrations
                     b.Navigation("Votos");
                 });
 
-            modelBuilder.Entity("Persistance.Entities.PartidoPolitico", b =>
+            modelBuilder.Entity("Core.Entities.PartidoPolitico", b =>
                 {
                     b.Navigation("CandidatoPuestos");
 
@@ -650,19 +653,19 @@ namespace Persistance.Migrations
                     b.Navigation("dirigentePoliticos");
                 });
 
-            modelBuilder.Entity("Persistance.Entities.PuestoElectivo", b =>
+            modelBuilder.Entity("Core.Entities.PuestoElectivo", b =>
                 {
                     b.Navigation("CandidatoPuestos");
 
                     b.Navigation("Detalles");
                 });
 
-            modelBuilder.Entity("Persistance.Entities.Usuario", b =>
+            modelBuilder.Entity("Core.Entities.Usuario", b =>
                 {
                     b.Navigation("dirigentePoliticos");
                 });
 
-            modelBuilder.Entity("Persistance.Entities.Voto", b =>
+            modelBuilder.Entity("Core.Entities.Voto", b =>
                 {
                     b.Navigation("Detalles");
                 });

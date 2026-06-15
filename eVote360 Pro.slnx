@@ -1,5 +1,7 @@
 <Solution>
   <Project Path="Application/Application.csproj" />
+  <Project Path="Core/Core.csproj" Id="4245edd8-dbca-4732-9122-db7a87ecf0a2" />
   <Project Path="eVote360 Pro/eVote360 Pro.csproj" />
   <Project Path="Persistance/Persistance.csproj" />
+  <Project Path="Shared/Shared.csproj" Id="459c92a5-5718-4218-9a7d-1e8cacfb508b" />
 </Solution>

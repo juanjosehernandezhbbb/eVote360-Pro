@@ -1,5 +1,7 @@
 using Microsoft.Extensions.DependencyInjection;
 using Persistance.Repositories;
+using Core.Repositories;
+
 
 namespace Persistance.Extensions
 {

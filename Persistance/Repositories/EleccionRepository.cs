@@ -1,7 +1,9 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Persistance.Context;
-using Persistance.Entities;
-using Persistance.Enums;
+using Core.Entities;
+using Core.Enums;
+using Core.Repositories;
+
 
 namespace Persistance.Repositories
 {

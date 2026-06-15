@@ -1,6 +1,7 @@
-﻿
+﻿using Core.Repositories;
 using Microsoft.EntityFrameworkCore;
 using Persistance.Context;
+using System.Linq.Expressions;
 
 namespace Persistance.Repositories
 {
@@ -34,6 +35,9 @@ namespace Persistance.Repositories
             return await _context.Set<T>().FindAsync(id);
         }
 
-
+        public virtual async Task<bool> ExistsAsync(Expression<Func<T, bool>> filter)
+        {
+            return await _context.Set<T>().AnyAsync(filter);
+        }
     }
 }
