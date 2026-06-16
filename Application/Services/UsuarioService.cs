@@ -38,7 +38,7 @@ namespace Application.Services
                 Apellido = dto.Apellido.Trim(),
                 Email = dto.Email.Trim(),
                 NombreUsuario = usernameLimpio,
-                PasswordHash = HashearPassword(password), 
+                PasswordHash = HashearPassword(password),
                 Rol = dto.Rol,
                 Estado = true
             };
@@ -53,7 +53,6 @@ namespace Application.Services
 
             var usernameLimpio = dto.NombreUsuario.Trim().ToLower();
 
-            // Validar cambio de username
             if (usuarioExistente.NombreUsuario.ToLower() != usernameLimpio)
             {
                 bool existeUsuario = await _usuarioRepo.ExistsAsync(u => u.Id != dto.Id && u.NombreUsuario.ToLower() == usernameLimpio);
@@ -61,11 +60,10 @@ namespace Application.Services
                 usuarioExistente.NombreUsuario = usernameLimpio;
             }
 
-            // Validar cambio de rol: Si era dirigente y pasa a admin, verificar que no tenga partido asignado
             if (usuarioExistente.Rol == (int)RolUsuario.DirigentePolitico && dto.Rol == (int)RolUsuario.Administrador)
             {
                 bool tienePartidoAsignado = await _dirigenteRepo.ExistsAsync(d => d.UsuarioId == dto.Id);
-                if (tienePartidoAsignado) throw new Exception("No se puede cambiar el rol de este usuario a Administrador porque tiene un partido político asignado. Elimine la asignación primero.");
+                if (tienePartidoAsignado) throw new Exception("No se puede cambiar el rol de este usuario a Administrador porque tiene un partido politico asignado. Elimine la asignacion primero.");
             }
 
             usuarioExistente.Nombre = dto.Nombre.Trim();
@@ -74,7 +72,6 @@ namespace Application.Services
             usuarioExistente.Rol = dto.Rol;
             usuarioExistente.Estado = dto.Estado;
 
-            // Solo actualizar el password si se envió uno nuevo
             if (!string.IsNullOrWhiteSpace(nuevaPassword))
             {
                 usuarioExistente.PasswordHash = HashearPassword(nuevaPassword);
@@ -83,28 +80,30 @@ namespace Application.Services
             await _usuarioRepo.UpdateAsync(usuarioExistente);
         }
 
+        // ===================================================================
+        // METODO CORREGIDO: CambiarEstadoAsync
+        // ===================================================================
         public async Task CambiarEstadoAsync(int id, bool nuevoEstado)
         {
             var usuarioExistente = await _usuarioRepo.GetByIdAsync(id);
             if (usuarioExistente == null) throw new Exception("Usuario no encontrado.");
 
-            if (usuarioExistente.Estado == nuevoEstado) throw new Exception($"El usuario ya está {(nuevoEstado ? "activo" : "inactivo")}.");
+            if (usuarioExistente.Estado == nuevoEstado) throw new Exception($"El usuario ya esta {(nuevoEstado ? "activo" : "inactivo")}.");
 
-            // Validaciones al desactivar
             if (!nuevoEstado)
             {
-                // Regla: No desactivar si es dirigente y tiene partido
+                // 1. Validacion para Dirigentes Politicos
                 if (usuarioExistente.Rol == (int)RolUsuario.DirigentePolitico)
                 {
                     bool tienePartido = await _dirigenteRepo.ExistsAsync(d => d.UsuarioId == id);
-                    if (tienePartido) throw new Exception("No se puede desactivar este dirigente porque tiene un partido político asignado.");
+                    if (tienePartido) throw new Exception("No se puede desactivar este dirigente porque tiene un partido politico asignado.");
                 }
 
-                // Regla opcional pero recomendada: Prevenir que el último administrador se desactive a sí mismo
-                if (usuarioExistente.Rol == (int)RolUsuario.DirigentePolitico)
+                // 2. Validacion para Administradores (Aqui estaba el error)
+                if (usuarioExistente.Rol == (int)RolUsuario.Administrador)
                 {
-                    var adminsActivos = (await _usuarioRepo.GetAllAsync()).Count(u => u.Rol == (int)RolUsuario.DirigentePolitico && u.Estado == true);
-                    if (adminsActivos <= 1) throw new Exception("No se puede desactivar a este usuario porque es el único Administrador activo en el sistema.");
+                    var adminsActivos = (await _usuarioRepo.GetAllAsync()).Count(u => u.Rol == (int)RolUsuario.Administrador && u.Estado == true);
+                    if (adminsActivos <= 1) throw new Exception("No se puede desactivar a este usuario porque es el unico Administrador activo en el sistema.");
                 }
             }
 
@@ -144,7 +143,27 @@ namespace Application.Services
             };
         }
 
-        // Método privado para hashear la contraseña
+        public async Task<UsuarioDto?> ValidarCredencialesAsync(string email, string password)
+        {
+            var usuarios = await _usuarioRepo.GetAllAsync();
+            var passwordHash = HashearPassword(password);
+
+            var usuario = usuarios.FirstOrDefault(u =>
+                u.Email.Trim().ToLower() == email.Trim().ToLower() &&
+                u.PasswordHash == passwordHash &&
+                u.Estado == true);
+
+            if (usuario == null) return null;
+
+            return new UsuarioDto
+            {
+                Id = usuario.Id,
+                Nombre = usuario.Nombre,
+                NombreUsuario = usuario.NombreUsuario,
+                Rol = usuario.Rol
+            };
+        }
+
         private string HashearPassword(string textoPlano)
         {
             using (var sha256 = SHA256.Create())

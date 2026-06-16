@@ -1,0 +1,48 @@
+﻿@model Persistance.Dtos.EleccionDto
+
+@{
+    ViewData["Title"] = "Nueva Eleccion";
+}
+
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card shadow-sm">
+            <div class="card-header bg-success text-white">
+                <h5 class="mb-0"><i class="fas fa-plus-circle me-2"></i> Registrar Nueva Eleccion</h5>
+            </div>
+            <div class="card-body p-4">
+                
+                <div asp-validation-summary="ModelOnly" class="text-danger mb-3 fw-bold"></div>
+
+                <form asp-action="Create" method="post">
+                    <div class="mb-3">
+                        <label asp-for="Nombre" class="form-label fw-semibold text-secondary">Nombre de la Eleccion <span class="text-danger">*</span></label>
+                        <input asp-for="Nombre" class="form-control" required placeholder="Ej: Elecciones Presidenciales Ordinarias 2026" />
+                        <span asp-validation-for="Nombre" class="text-danger"></span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="Fecha" class="form-label fw-semibold text-secondary">Fecha Programada <span class="text-danger">*</span></label>
+                        <input asp-for="Fecha" type="date" class="form-control" required value="@DateTime.Now.ToString("yyyy-MM-dd")" />
+                        <span asp-validation-for="Fecha" class="text-danger"></span>
+                    </div>
+
+                    <div class="alert alert-info border-0 shadow-none mb-0">
+                        <i class="fas fa-info-circle me-2"></i> Nota: Al guardar, la eleccion se creara en estado <strong>Pendiente</strong>. Se ejecutaran validaciones automaticas para certificar que todos los partidos tengan candidatos activos en cada puesto antes de permitir su apertura formal.
+                    </div>
+
+                    <div class="d-flex justify-content-end mt-4 border-top pt-3">
+                        <a asp-action="Index" class="btn btn-secondary me-2">Cancelar</a>
+                        <button type="submit" class="btn bg-success text-white shadow-sm fw-bold">
+                            <i class="fas fa-save me-1"></i> Guardar Configuracion
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

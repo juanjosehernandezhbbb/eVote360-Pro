@@ -1,8 +1,32 @@
 ﻿@{
-    ViewData["Title"] = "Home Page";
+    ViewData["Title"] = "Inicio";
 }
 
-<div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
+<div class="text-center mt-5">
+    <h1 class="display-4">eVote360 Pro</h1>
+    <p class="lead">Sistema integral de gestión y votación electrónica.</p>
+    
+    <div class="alert alert-info mt-4">
+        <h4>@ViewBag.MensajeBienvenida</h4>
+    </div>
+
+    @if (!User.Identity.IsAuthenticated)
+    {
+        <div class="mt-4">
+            <a asp-controller="Usuario" asp-action="Login" class="btn btn-primary btn-lg">Iniciar Sesión</a>
+        </div>
+    }
+    else
+    {
+        <div class="row mt-5">
+            <div class="col-md-6 offset-md-3">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">Acceso Rápido</h5>
+                        <p class="card-text">Utilice el menú lateral para acceder a las funciones disponibles según su perfil de usuario.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
 </div>

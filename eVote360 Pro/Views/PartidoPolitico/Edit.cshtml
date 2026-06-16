@@ -1,0 +1,60 @@
+﻿@model Application.Dtos.PartidoPoliticoDto
+
+@{
+    ViewData["Title"] = "Editar Partido Político";
+}
+
+<div class="card shadow-sm max-w-xl mx-auto">
+    <div class="card-header bg-warning text-dark fw-bold">
+        <h5 class="mb-0">Modificar Partido Político: @Model.Siglas</h5>
+    </div>
+    <div class="card-body">
+
+        <div asp-validation-summary="ModelOnly" class="text-danger mb-3 fw-bold"></div>
+
+        <div class="alert alert-info py-2 small" role="alert">
+            <i class="fas fa-info-circle"></i> <strong>Nota:</strong> Si este partido ya participó en procesos electorales activos o cerrados, el sistema rechazará automáticamente cambios en el Nombre, Siglas o Logo.
+        </div>
+
+        <form asp-action="Edit" method="post">
+            <input type="hidden" asp-for="Id" />
+            <input type="hidden" asp-for="Estado" />
+
+            <div class="row">
+                <div class="col-md-8 mb-3">
+                    <label asp-for="Nombre" class="form-label">Nombre del Partido <span class="text-danger">*</span></label>
+                    <input asp-for="Nombre" class="form-control" required />
+                    <span asp-validation-for="Nombre" class="text-danger"></span>
+                </div>
+                <div class="col-md-4 mb-3">
+                    <label asp-for="Siglas" class="form-label">Siglas <span class="text-danger">*</span></label>
+                    <input asp-for="Siglas" class="form-control" required />
+                    <span asp-validation-for="Siglas" class="text-danger"></span>
+                </div>
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="LogoUrl" class="form-label">URL del Logo / Emblema</label>
+                <input asp-for="LogoUrl" type="url" class="form-control" />
+                <span asp-validation-for="LogoUrl" class="text-danger"></span>
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="Descripcion" class="form-label">Descripción o Reseña Histórica</label>
+                <textarea asp-for="Descripcion" class="form-control" rows="3"></textarea>
+                <span asp-validation-for="Descripcion" class="text-danger"></span>
+            </div>
+
+            <div class="d-flex justify-content-end mt-4">
+                <a asp-action="Index" class="btn btn-secondary me-2">Cancelar</a>
+                <button type="submit" class="btn btn-warning text-dark fw-bold">
+                    <i class="fas fa-edit"></i> Guardar Cambios
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

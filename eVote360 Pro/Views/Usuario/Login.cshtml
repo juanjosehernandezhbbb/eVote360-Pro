@@ -1,0 +1,52 @@
+﻿@{
+    Layout = "_Layout";
+    ViewData["Title"] = "Iniciar Sesion";
+}
+
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-5">
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-primary text-white text-center py-3">
+                    <h5 class="mb-0 fw-bold">
+                        <i class="fas fa-lock-open me-2"></i> eVote360 Pro - Acceso
+                    </h5>
+                </div>
+                <div class="card-body p-4">
+                    
+                    @if (ViewBag.Error != null)
+                    {
+                        <div class="alert alert-danger alert-dismissible fade show shadow-sm" role="alert">
+                            <i class="fas fa-exclamation-circle me-2"></i> @ViewBag.Error
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    }
+
+                    <form asp-controller="Usuario" asp-action="Login" method="post" autocomplete="off">
+                        
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold text-secondary">Correo Electronico</label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light text-muted"><i class="fas fa-envelope"></i></span>
+                                <input type="email" name="email" class="form-control" required placeholder="ejemplo@correo.com" />
+                            </div>
+                        </div>
+                        
+                        <div class="mb-4">
+                            <label class="form-label fw-semibold text-secondary">Contraseña</label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light text-muted"><i class="fas fa-key"></i></span>
+                                <input type="password" name="password" class="form-control" required placeholder="••••••••" />
+                            </div>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary w-100 py-2 fw-bold shadow-sm">
+                            <i class="fas fa-sign-in-alt me-2"></i> Ingresar al Sistema
+                        </button>
+                    </form>
+                    
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

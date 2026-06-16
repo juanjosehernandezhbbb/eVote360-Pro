@@ -55,28 +55,25 @@ namespace Application.Services
 
         public async Task ActualizarAsync(CandidatoDto dto)
         {
+            // 1. Validar reglas de negocio
             await ValidarEleccionActivaAsync("editar");
 
+            // 2. Obtener el candidato
             var candidatoExistente = await _candidatoRepo.GetByIdAsync(dto.Id);
             if (candidatoExistente == null) throw new Exception("Candidato no encontrado.");
 
-            // Regla crítica: Si el candidato cambia de partido, verificar si ya participó en una elección
+            // 3. Aplicar cambios a la entidad recuperada (esto marca la entidad como modificada en EF)
             if (candidatoExistente.PartidoPoliticoId != dto.PartidoPoliticoId)
             {
                 bool participoEnEleccion = await _candidatoPuestoRepo.ExistsAsync(cp => cp.CandidatoId == dto.Id)
                                            && await _eleccionRepo.ExistsAsync(e => e.EstadoEleccion == EstadoEleccion.Activa || e.EstadoEleccion == EstadoEleccion.Finalizada);
 
                 if (participoEnEleccion)
-                {
-                    throw new Exception("No se puede cambiar el partido político de este candidato porque ya ha participado en una elección.");
-                }
+                    throw new Exception("No se puede cambiar el partido político...");
 
-                // Validar que el nuevo partido exista y esté activo
                 var nuevoPartido = await _partidoRepo.GetByIdAsync(dto.PartidoPoliticoId);
                 if (nuevoPartido == null || !nuevoPartido.Estado)
-                {
-                    throw new Exception("El nuevo partido político seleccionado no existe o se encuentra inactivo.");
-                }
+                    throw new Exception("El nuevo partido político seleccionado no existe o está inactivo.");
 
                 candidatoExistente.PartidoPoliticoId = dto.PartidoPoliticoId;
             }
@@ -84,7 +81,6 @@ namespace Application.Services
             candidatoExistente.Nombre = dto.Nombre.Trim();
             candidatoExistente.Apellido = dto.Apellido.Trim();
 
-            // Solo actualizamos la foto si enviaron una nueva
             if (!string.IsNullOrEmpty(dto.FotoUrl))
             {
                 candidatoExistente.FotoUrl = dto.FotoUrl;
@@ -92,6 +88,9 @@ namespace Application.Services
 
             candidatoExistente.Estado = dto.Estado;
 
+            // 4. MANTENER EL UPDATE PERO ASEGURAR QUE EF DETECTE EL CAMBIO
+            // Como estamos trabajando sobre la misma instancia que obtuvimos de la DB, 
+            // el contexto ya la está rastreando. 
             await _candidatoRepo.UpdateAsync(candidatoExistente);
         }
 
@@ -115,12 +114,13 @@ namespace Application.Services
 
         public async Task<IEnumerable<CandidatoDto>> ObtenerPorPartidoAsync(int partidoId)
         {
-            // Nota: Aquí lo ideal sería que tu repositorio tenga un método GetAllAsync() que reciba un filtro.
-            // Si no lo tiene, traemos todos y filtramos en memoria (esto está bien para un proyecto pequeño).
             var todos = await _candidatoRepo.GetAllAsync();
-            var candidatosDelPartido = todos.Where(c => c.PartidoPoliticoId == partidoId).ToList();
 
-            return candidatosDelPartido.Select(c => new CandidatoDto
+            var candidatos = (partidoId == 0)
+                ? todos
+                : todos.Where(c => c.PartidoPoliticoId == partidoId);
+
+            return candidatos.Select(c => new CandidatoDto
             {
                 Id = c.Id,
                 Nombre = c.Nombre,
@@ -145,6 +145,21 @@ namespace Application.Services
                 PartidoPoliticoId = c.PartidoPoliticoId,
                 Estado = c.Estado
             };
+        }
+
+
+        public async Task<IEnumerable<CandidatoDto>> ObtenerTodosAsync()
+        {
+            var lista = await _candidatoRepo.GetAllAsync();
+            return lista.Select(c => new CandidatoDto
+            {
+                Id = c.Id,
+                Nombre = c.Nombre,
+                Apellido = c.Apellido,
+                FotoUrl = c.FotoUrl,
+                PartidoPoliticoId = c.PartidoPoliticoId,
+                Estado = c.Estado
+            }).ToList();
         }
 
         private async Task ValidarEleccionActivaAsync(string accion)

@@ -14,5 +14,6 @@ namespace Application.Interfaces
         Task CrearAsync(UsuarioDto dto, string password); 
         Task ActualizarAsync(UsuarioDto dto, string? nuevaPassword);
         Task CambiarEstadoAsync(int id, bool nuevoEstado);
+        Task<UsuarioDto?> ValidarCredencialesAsync(string email, string password);
     }
 }

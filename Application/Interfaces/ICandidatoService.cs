@@ -10,6 +10,7 @@ namespace Application.Interfaces
 {
     public interface ICandidatoService
     {
+        Task<IEnumerable<CandidatoDto>> ObtenerTodosAsync();
         Task<IEnumerable<CandidatoDto>> ObtenerPorPartidoAsync(int partidoId);
         Task<CandidatoDto> ObtenerPorIdAsync(int id);
         Task CrearAsync(CandidatoDto dto);

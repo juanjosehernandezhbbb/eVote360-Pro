@@ -10,7 +10,12 @@ namespace Persistance.Context
         {
             var optionsBuilder = new DbContextOptionsBuilder<eVote360ProContext>();
             var connectionString = "Server=(localdb)\\MSSQLLocalDB;Database=eVote360Pro;Trusted_Connection=True;TrustServerCertificate=True";
-            optionsBuilder.UseSqlServer(connectionString);
+
+            optionsBuilder.UseSqlServer(connectionString, sqlServerOptions =>
+            {
+                sqlServerOptions.EnableRetryOnFailure(); 
+            });
+
             return new eVote360ProContext(optionsBuilder.Options);
         }
     }

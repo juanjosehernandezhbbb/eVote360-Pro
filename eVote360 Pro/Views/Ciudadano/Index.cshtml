@@ -1,0 +1,79 @@
+﻿@model IEnumerable<Application.Dtos.CiudadanoDto>
+
+@{
+    ViewData["Title"] = "Gestión de Ciudadanos";
+}
+
+<div class="card shadow-sm">
+    <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">Lista de Ciudadanos</h5>
+        <a asp-action="Create" class="btn btn-light btn-sm text-primary fw-bold">
+            <i class="fas fa-plus"></i> Nuevo Ciudadano
+        </a>
+    </div>
+    <div class="card-body">
+        
+        @if (TempData["SuccessMessage"] != null)
+        {
+            <div class="alert alert-success alert-dismissible fade show" role="alert">
+                @TempData["SuccessMessage"]
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        }
+        @if (TempData["ErrorMessage"] != null)
+        {
+            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                @TempData["ErrorMessage"]
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        }
+
+        <div class="table-responsive">
+            <table class="table table-hover table-bordered align-middle">
+                <thead class="table-light">
+                    <tr>
+                        <th>Documento</th>
+                        <th>Nombre Completo</th>
+                        <th>Email</th>
+                        <th>Estado</th>
+                        <th class="text-center">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in Model)
+                    {
+                        <tr>
+                            <td>@item.NumeroDocumento</td>
+                            <td>@item.Nombre @item.Apellido</td>
+                            <td>@item.Email</td>
+                            <td>
+                                @if(item.Estado)
+                                {
+                                    <span class="badge bg-success">Activo</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-danger">Inactivo</span>
+                                }
+                            </td>
+                            <td class="text-center">
+                                <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-warning btn-sm">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                                
+                                <!-- Formulario para cambiar estado (Post es más seguro que Get para esto) -->
+                                <form asp-action="CambiarEstado" method="post" class="d-inline">
+                                    <input type="hidden" name="id" value="@item.Id" />
+                                    <input type="hidden" name="nuevoEstado" value="@((!item.Estado).ToString().ToLower())" />
+                                    <button type="submit" class="btn btn-sm @(item.Estado ? "btn-danger" : "btn-success")" title="@(item.Estado ? "Desactivar" : "Activar")">
+                                        <i class="fas @(item.Estado ? "fa-ban" : "fa-check")"></i>
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

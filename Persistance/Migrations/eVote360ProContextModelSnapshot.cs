@@ -382,6 +382,19 @@ namespace Persistance.Migrations
                         .IsUnique();
 
                     b.ToTable("Usuario", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1,
+                            Apellido = "Sistemas",
+                            Email = "admin@evote360.com",
+                            Estado = true,
+                            Nombre = "Admin",
+                            NombreUsuario = "admin",
+                            PasswordHash = "jZae727K08KaOmKSgOaGzww/XVqGr/PKEgIMkjrcbJI=",
+                            Rol = 1
+                        });
                 });
 
             modelBuilder.Entity("Core.Entities.VotacionCiudadano", b =>

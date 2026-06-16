@@ -7,12 +7,12 @@ using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 
-
 namespace Persistance.Context
 {
     public class eVote360ProContext : DbContext
     {
         public eVote360ProContext(DbContextOptions<eVote360ProContext> options) : base(options) { }
+
         public DbSet<Ciudadano> Ciudadanos { get; set; }
         public DbSet<Candidato> Candidatos { get; set; }
         public DbSet<CandidatoPuesto> CandidatoPuestos { get; set; }
@@ -30,9 +30,19 @@ namespace Persistance.Context
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
-            modelBuilder.ApplyConfigurationsFromAssembly(Assembly.GetExecutingAssembly());
 
+                        modelBuilder.ApplyConfigurationsFromAssembly(Assembly.GetExecutingAssembly());
 
+                        modelBuilder.Entity<Usuario>().HasData(new Usuario
+            {
+                Id = 1,
+                Nombre = "Admin",
+                Apellido = "Sistemas",
+                Email = "admin@evote360.com",
+                NombreUsuario = "admin",
+                                PasswordHash = "jZae727K08KaOmKSgOaGzww/XVqGr/PKEgIMkjrcbJI=",
+                Rol = 1,                 Estado = true
+            });
         }
     }
 }
