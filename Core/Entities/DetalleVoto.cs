@@ -11,7 +11,7 @@ namespace Core.Entities
 
         public int Id { get; set; }
         public Candidato Candidato { get; set; }
-        public int CandidatoId { get; set; }
+        public int? CandidatoId { get; set; }
 
         public PuestoElectivo PuestoElectivo { get; set; }
         public int PuestoElectivoId { get; set; }

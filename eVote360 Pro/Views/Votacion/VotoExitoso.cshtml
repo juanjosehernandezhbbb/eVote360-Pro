@@ -1,0 +1,31 @@
+﻿@{
+    ViewData["Title"] = "Votacion Exitosa";
+}
+
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8 text-center">
+            <div class="card shadow border-success mt-4">
+                <div class="card-body p-5">
+                    <h1 class="text-success mb-4" style="font-size: 4rem;">
+                        O
+                    </h1>
+                    <h2 class="text-success fw-bold">¡Voto Registrado con Exito!</h2>
+                    <hr class="my-4" />
+                    <p class="lead text-muted">
+                        Su participacion en este proceso electoral ha sido guardada de forma segura y anonima.
+                    </p>
+                    <p class="text-secondary">
+                        Hemos enviado un recibo con el resumen de su seleccion al correo electronico que tiene registrado en nuestro sistema.
+                    </p>
+                    
+                    <div class="mt-5">
+                        <a asp-controller="Home" asp-action="Index" class="btn btn-primary btn-lg px-4">
+                            Regresar al Inicio
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

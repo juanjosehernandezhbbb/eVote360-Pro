@@ -13,16 +13,15 @@ namespace Application.ViewModels
         [Required(ErrorMessage = "El apellido es obligatorio")]
         public string Apellido { get; set; }
 
-                public string FotoUrl { get; set; }
+        public string FotoUrl { get; set; }
 
-                [Display(Name = "Foto del Candidato")]
-        public IFormFile FotoFile { get; set; }
+        [Display(Name = "Foto del Candidato")]
+        public IFormFile? FotoFile { get; set; } // Agregado el ? para que sea opcional
 
-        [Required(ErrorMessage = "Debe seleccionar un partido político")]
-        [Display(Name = "Partido Político")]
+        [Required(ErrorMessage = "Debe seleccionar un partido politico")]
+        [Display(Name = "Partido Politico")]
         public int PartidoPoliticoId { get; set; }
 
         public bool Estado { get; set; }
-
-                    }
+    }
 }

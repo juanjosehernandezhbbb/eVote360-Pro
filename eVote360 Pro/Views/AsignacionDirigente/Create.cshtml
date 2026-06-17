@@ -1,0 +1,44 @@
+﻿@model eVote360_Pro.Models.CrearAsignacionDirigenteViewModel
+
+@{
+    ViewData["Title"] = "Asignar Dirigente a Partido";
+}
+
+<div class="card shadow-sm mx-auto" style="max-width: 600px;">
+    <div class="card-header bg-primary text-white">
+        <h4 class="mb-0">Asignar Dirigente a Partido</h4>
+    </div>
+    <div class="card-body">
+        
+        <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+        <form asp-action="Create" method="post">
+            
+            <div class="mb-3">
+                <label asp-for="UsuarioId" class="form-label fw-bold">Seleccionar Dirigente</label>
+                <select asp-for="UsuarioId" asp-items="Model.UsuariosDirigentes" class="form-select">
+                    <option value="">-- Seleccione un dirigente --</option>
+                </select>
+                <span asp-validation-for="UsuarioId" class="text-danger"></span>
+            </div>
+
+            <div class="mb-4">
+                <label asp-for="PartidoPoliticoId" class="form-label fw-bold">Seleccionar Partido</label>
+                <select asp-for="PartidoPoliticoId" asp-items="Model.PartidosPoliticos" class="form-select">
+                    <option value="">-- Seleccione un partido --</option>
+                </select>
+                <span asp-validation-for="PartidoPoliticoId" class="text-danger"></span>
+            </div>
+
+            <div class="d-flex justify-content-between">
+                <a asp-action="Index" class="btn btn-secondary">Cancelar</a>
+                <button type="submit" class="btn btn-success">Guardar Asignación</button>
+            </div>
+            
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

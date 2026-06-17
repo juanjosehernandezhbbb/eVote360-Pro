@@ -1,4 +1,5 @@
 ﻿using Application.Dtos;
+using Core.Entities;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -12,5 +13,7 @@ namespace Application.Interfaces
         Task<IEnumerable<CandidatoPuestoDto>> ObtenerAsignacionesPorPartidoAsync(int partidoId);
         Task AsignarAsync(int candidatoId, int puestoElectivoId, int partidoPoliticoId);
         Task EliminarAsignacionAsync(int asignacionId, int partidoPoliticoId);
+        Task<IEnumerable<Candidato>> GetCandidatosDisponiblesAsync(int partidoId);
+
     }
 }

@@ -7,6 +7,7 @@ using Application.Dtos;
 using System.IO;
 using System.Threading.Tasks;
 using System;
+using System.Linq;
 
 namespace eVote360_Pro.Controllers
 {
@@ -27,17 +28,47 @@ namespace eVote360_Pro.Controllers
             _webHostEnvironment = webHostEnvironment;
         }
 
+        // ==========================================
+        // MÉTODO AUXILIAR PARA OBTENER EL PARTIDO DEL USUARIO LOGUEADO
+        // ==========================================
+        private int? ObtenerPartidoIdUsuarioActual()
+        {
+            var claimPartido = User.FindFirst("PartidoId");
+            if (claimPartido != null && int.TryParse(claimPartido.Value, out int id) && id > 0)
+            {
+                return id;
+            }
+            return null;
+        }
+
         // GET: Candidato
         public async Task<IActionResult> Index()
         {
             var candidatos = await _candidatoService.ObtenerTodosAsync();
+
+            // FILTRO DE AISLAMIENTO: Si es Dirigente, solo ve a los suyos
+            if (User.IsInRole("Dirigente"))
+            {
+                int? miPartidoId = ObtenerPartidoIdUsuarioActual();
+                candidatos = candidatos.Where(c => c.PartidoPoliticoId == miPartidoId).ToList();
+            }
+
             return View(candidatos);
         }
 
         // GET: Candidato/Create
         public async Task<IActionResult> Create()
         {
-            ViewBag.Partidos = await _partidoService.ObtenerTodosAsync();
+            var partidos = await _partidoService.ObtenerTodosAsync();
+
+            // FILTRO DE VISTA: El Dirigente solo puede seleccionarse a sí mismo en el DropDown
+            if (User.IsInRole("Dirigente"))
+            {
+                int? miPartidoId = ObtenerPartidoIdUsuarioActual();
+                partidos = partidos.Where(p => p.Id == miPartidoId).ToList();
+            }
+
+            ViewBag.Partidos = partidos;
             return View();
         }
 
@@ -48,9 +79,18 @@ namespace eVote360_Pro.Controllers
         {
             ModelState.Remove("FotoUrl");
 
+            // SEGURIDAD: Forzamos el ID del partido si es un Dirigente (evita hackeo del HTML)
+            if (User.IsInRole("Dirigente"))
+            {
+                vm.PartidoPoliticoId = ObtenerPartidoIdUsuarioActual().Value;
+            }
+
             if (!ModelState.IsValid)
             {
-                ViewBag.Partidos = await _partidoService.ObtenerTodosAsync();
+                var partidos = await _partidoService.ObtenerTodosAsync();
+                if (User.IsInRole("Dirigente")) partidos = partidos.Where(p => p.Id == ObtenerPartidoIdUsuarioActual()).ToList();
+                ViewBag.Partidos = partidos;
+
                 return View(vm);
             }
 
@@ -87,7 +127,9 @@ namespace eVote360_Pro.Controllers
             catch (Exception ex)
             {
                 ModelState.AddModelError("", $"Error al registrar: {ex.Message}");
-                ViewBag.Partidos = await _partidoService.ObtenerTodosAsync();
+                var partidos = await _partidoService.ObtenerTodosAsync();
+                if (User.IsInRole("Dirigente")) partidos = partidos.Where(p => p.Id == ObtenerPartidoIdUsuarioActual()).ToList();
+                ViewBag.Partidos = partidos;
                 return View(vm);
             }
         }
@@ -98,7 +140,19 @@ namespace eVote360_Pro.Controllers
             var candidato = await _candidatoService.ObtenerPorIdAsync(id);
             if (candidato == null) return NotFound();
 
-            ViewBag.Partidos = await _partidoService.ObtenerTodosAsync();
+            // SEGURIDAD: Un Dirigente no puede entrar a editar un candidato de otro partido
+            if (User.IsInRole("Dirigente") && candidato.PartidoPoliticoId != ObtenerPartidoIdUsuarioActual())
+            {
+                return RedirectToAction("AccesoDenegado", "Home"); // O simplemente Unauthorized();
+            }
+
+            var partidos = await _partidoService.ObtenerTodosAsync();
+            if (User.IsInRole("Dirigente"))
+            {
+                int? miPartidoId = ObtenerPartidoIdUsuarioActual();
+                partidos = partidos.Where(p => p.Id == miPartidoId).ToList();
+            }
+            ViewBag.Partidos = partidos;
 
             var vm = new CandidatoViewModel
             {
@@ -112,17 +166,25 @@ namespace eVote360_Pro.Controllers
             return View(vm);
         }
 
-
         // POST: Candidato/Edit/5
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(CandidatoViewModel vm)
         {
             ModelState.Remove("FotoUrl");
+            ModelState.Remove("FotoFile");
+
+            // SEGURIDAD: Forzamos el ID del partido si es un Dirigente
+            if (User.IsInRole("Dirigente"))
+            {
+                vm.PartidoPoliticoId = ObtenerPartidoIdUsuarioActual().Value;
+            }
 
             if (!ModelState.IsValid)
             {
-                ViewBag.Partidos = await _partidoService.ObtenerTodosAsync();
+                var partidos = await _partidoService.ObtenerTodosAsync();
+                if (User.IsInRole("Dirigente")) partidos = partidos.Where(p => p.Id == ObtenerPartidoIdUsuarioActual()).ToList();
+                ViewBag.Partidos = partidos;
                 return View(vm);
             }
 
@@ -159,8 +221,6 @@ namespace eVote360_Pro.Controllers
             }
             catch (Exception ex)
             {
-                // CAMBIO: En lugar de intentar mostrar la vista, 
-                // lanzamos el error completo para verlo en pantalla.
                 return Content("ERROR DETECTADO: " + ex.Message + "\n\nDETALLES: " + ex.StackTrace);
             }
         }
@@ -169,14 +229,18 @@ namespace eVote360_Pro.Controllers
         [HttpPost]
         public async Task<IActionResult> CambiarEstado(int id, bool estado)
         {
+            // SEGURIDAD: Un Dirigente no puede desactivar candidatos de otro partido
+            if (User.IsInRole("Dirigente"))
+            {
+                var candidato = await _candidatoService.ObtenerPorIdAsync(id);
+                if (candidato == null || candidato.PartidoPoliticoId != ObtenerPartidoIdUsuarioActual())
+                {
+                    return Unauthorized();
+                }
+            }
+
             await _candidatoService.CambiarEstadoAsync(id, estado);
             return RedirectToAction(nameof(Index));
-        }
-        [HttpPost]
-        [IgnoreAntiforgeryToken] // Para evitar que las cookies nos bloqueen
-        public IActionResult TestBruto()
-        {
-            return Content("¡EL POST SÍ LLEGÓ AL SERVIDOR!");
         }
     }
 }

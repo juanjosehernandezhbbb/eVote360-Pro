@@ -1,5 +1,3 @@
-
-
 namespace Application.Dtos
 {
     public class UsuarioDto
@@ -11,5 +9,7 @@ namespace Application.Dtos
         public string NombreUsuario { get; set; }
         public int Rol { get; set; }
         public bool Estado { get; set; }
+
+        public int? PartidoPoliticoId { get; set; }
     }
 }

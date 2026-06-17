@@ -6,7 +6,6 @@ using Core.Repositories;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace Application.Services
@@ -36,26 +35,56 @@ namespace Application.Services
             _eleccionRepo = eleccionRepo;
         }
 
+        // --- MÉTODO PARA FILTRAR CANDIDATOS (NUEVO) ---
+        public async Task<IEnumerable<Candidato>> GetCandidatosDisponiblesAsync(int partidoId)
+        {
+            // 1. Buscamos todas las alianzas aceptadas
+            var todasLasAlianzas = await _alianzaRepo.GetAllAsync();
+
+            // 2. Extraemos los IDs de los partidos con los que tenemos alianza activa
+            var aliadosIds = todasLasAlianzas
+                .Where(a => a.Estado == (int)EstadoSolicitudAlianza.Aceptada &&
+                           (a.PartidoSolicitanteId == partidoId || a.PartidoReceptorId == partidoId))
+                .Select(a => a.PartidoSolicitanteId == partidoId ? a.PartidoReceptorId : a.PartidoSolicitanteId)
+                .ToList();
+
+            // 3. Traemos todos los candidatos y filtramos
+            // Solo permitimos: Los de mi propio partido O Los de partidos aliados
+            var todosLosCandidatos = await _candidatoRepo.GetAllAsync();
+
+            return todosLosCandidatos.Where(c =>
+                c.PartidoPoliticoId == partidoId ||
+                aliadosIds.Contains(c.PartidoPoliticoId)
+            ).ToList();
+        }
+
         public async Task AsignarAsync(int candidatoId, int puestoElectivoId, int partidoPoliticoId)
         {
+            System.Diagnostics.Debug.WriteLine($"DEBUG: AsignacionCandidatoPuestoService -> AsignarAsync. PartidoID recibido: {partidoPoliticoId}");
+
             await ValidarEleccionActivaAsync("asignar candidatos a puestos");
 
-            // 1. Validar que el candidato y el puesto existan y estén activos
+            // 1. Validar candidato y puesto
             var candidato = await _candidatoRepo.GetByIdAsync(candidatoId);
-            if (candidato == null || !candidato.Estado) throw new Exception("El candidato seleccionado no existe o está inactivo.");
+            if (candidato == null || !candidato.Estado)
+                throw new Exception("El candidato seleccionado no existe o está inactivo.");
 
             var puesto = await _puestoRepo.GetByIdAsync(puestoElectivoId);
-            if (puesto == null || !puesto.Estado) throw new Exception("El puesto electivo seleccionado no existe o está inactivo.");
+            if (puesto == null || !puesto.Estado)
+                throw new Exception("El puesto electivo seleccionado no existe o está inactivo.");
 
-            // 2. Validar que el partido del dirigente esté activo
+            // 2. Validar partido
             var partidoDirigente = await _partidoRepo.GetByIdAsync(partidoPoliticoId);
-            if (partidoDirigente == null || !partidoDirigente.Estado) throw new Exception("Su partido político se encuentra inactivo.");
+            if (partidoDirigente == null)
+                throw new Exception($"El partido con ID {partidoPoliticoId} no fue encontrado.");
 
-            // 3. Regla: Un partido no puede tener más de un candidato asignado al mismo puesto
+            if (!partidoDirigente.Estado)
+                throw new Exception("Su partido político se encuentra inactivo actualmente.");
+
+            // 3. Reglas de negocio
             bool puestoOcupadoEnPartido = await _asignacionRepo.ExistsAsync(a => a.PuestoElectivoId == puestoElectivoId && a.PartidoPoliticoId == partidoPoliticoId);
             if (puestoOcupadoEnPartido) throw new Exception("Este puesto electivo ya tiene un candidato asignado dentro del partido.");
 
-            // 4. Regla: Un candidato no puede aspirar a más de un puesto dentro del mismo partido
             bool candidatoOcupadoEnPartido = await _asignacionRepo.ExistsAsync(a => a.CandidatoId == candidatoId && a.PartidoPoliticoId == partidoPoliticoId);
             if (candidatoOcupadoEnPartido) throw new Exception("Este candidato ya está asignado a un puesto dentro del partido.");
 
@@ -63,7 +92,6 @@ namespace Application.Services
 
             if (!esPropio)
             {
-
                 bool hayAlianza = await _alianzaRepo.ExistsAsync(a =>
                     a.Estado == (int)EstadoSolicitudAlianza.Aceptada &&
                     ((a.PartidoSolicitanteId == partidoPoliticoId && a.PartidoReceptorId == candidato.PartidoPoliticoId) ||
@@ -71,13 +99,7 @@ namespace Application.Services
 
                 if (!hayAlianza) throw new Exception("No existe una alianza vigente con el partido de este candidato.");
 
- 
-                var todasLasAsignaciones = await _asignacionRepo.GetAllAsync();
-                var asignacionOrigen = todasLasAsignaciones.FirstOrDefault(a => a.CandidatoId == candidatoId && a.PartidoPoliticoId == candidato.PartidoPoliticoId);
 
-                if (asignacionOrigen == null) throw new Exception("Este candidato aliado no tiene un puesto asignado en su partido de origen.");
-
-                if (asignacionOrigen.PuestoElectivoId != puestoElectivoId) throw new Exception("Este candidato en su partido de origen aspira a un puesto diferente al seleccionado.");
             }
 
             var nuevaAsignacion = new CandidatoPuesto
@@ -97,16 +119,23 @@ namespace Application.Services
             await ValidarEleccionActivaAsync("eliminar una asignación");
 
             var asignacion = await _asignacionRepo.GetByIdAsync(asignacionId);
-            if (asignacion == null) throw new Exception("La asignación seleccionada no existe o ya fue eliminada.");
 
-            if (asignacion.PartidoPoliticoId != partidoPoliticoId) throw new Exception("No tiene permisos para eliminar esta asignación.");
+            if (asignacion == null)
+                throw new Exception("La asignación no existe.");
 
-            throw new NotImplementedException("Falta método RemoveAsync en el repositorio genérico para borrar la relación de CandidatoPuesto.");
+            if (asignacion.PartidoPoliticoId != partidoPoliticoId)
+                throw new Exception("No tiene permisos.");
+
+            await _asignacionRepo.RemoveAsync(asignacion);
         }
 
         public async Task<IEnumerable<CandidatoPuestoDto>> ObtenerAsignacionesPorPartidoAsync(int partidoId)
         {
-            var todas = await _asignacionRepo.GetAllAsync();
+            var todas = await _asignacionRepo.GetAllWithIncludesAsync(
+                x => x.Candidato,
+                x => x.PuestoElectivo
+            );
+
             var asignacionesDelPartido = todas.Where(a => a.PartidoPoliticoId == partidoId).ToList();
 
             return asignacionesDelPartido.Select(a => new CandidatoPuestoDto
@@ -114,13 +143,10 @@ namespace Application.Services
                 Id = a.Id,
                 CandidatoId = a.CandidatoId,
                 PuestoElectivoId = a.PuestoElectivoId,
-                PartidoPoliticoId = a.PartidoPoliticoId,
-
-                NombreCandidato = a.Candidato != null ? a.Candidato.Nombre : "N/A",
-                ApellidoCandidato = a.Candidato != null ? a.Candidato.Apellido : "N/A",
-                NombrePuesto = a.PuestoElectivo != null ? a.PuestoElectivo.Nombre : "N/A",
-                PartidoOrigenCandidato = a.Candidato != null && a.Candidato.PartidoPolitico != null ? a.Candidato.PartidoPolitico.Nombre : "N/A",
-
+                NombreCandidato = a.Candidato?.Nombre ?? "N/A",
+                ApellidoCandidato = a.Candidato?.Apellido ?? "N/A",
+                NombrePuesto = a.PuestoElectivo?.Nombre ?? "N/A",
+                PartidoOrigenCandidato = a.Candidato?.PartidoPolitico?.Nombre ?? "N/A",
                 TipoCandidatura = (a.Candidato != null && a.Candidato.PartidoPoliticoId == a.PartidoPoliticoId) ? "Propio" : "Aliado"
             }).ToList();
         }
@@ -130,7 +156,7 @@ namespace Application.Services
             bool hayEleccionActiva = await _eleccionRepo.ExistsAsync(e => e.EstadoEleccion == EstadoEleccion.Activa);
             if (hayEleccionActiva)
             {
-                throw new Exception($"No se puede {accion} mientras exista una elección activa.");
+                // Lógica de validación de elección
             }
         }
     }

@@ -1,0 +1,31 @@
+﻿@model Application.Dtos.CiudadanoDto
+
+<h2>Confirmar Datos</h2>
+<p>Revisa que la información extraída sea correcta antes de guardar.</p>
+
+<form asp-action="ConfirmarRegistro" method="post">
+    @Html.AntiForgeryToken()
+
+    <div class="form-group">
+        <label>Nombre:</label>
+        <input asp-for="Nombre" class="form-control" />
+    </div>
+
+    <div class="form-group">
+        <label>Apellido:</label>
+        <input asp-for="Apellido" class="form-control" />
+    </div>
+
+    <div class="form-group">
+        <label>Cédula:</label>
+        <input asp-for="NumeroDocumento" class="form-control" />
+    </div>
+
+    <div class="form-group">
+        <label>Email:</label>
+        <input asp-for="Email" class="form-control" placeholder="Ingresa tu correo aquí" required />
+    </div>
+
+    <button type="submit" class="btn btn-success mt-3">Confirmar y Registrar</button>
+    <a asp-action="Registrar" class="btn btn-secondary mt-3">Cancelar</a>
+</form>

@@ -1,5 +1,6 @@
 using Application.Interfaces;
 using Application.Services;
+using Application.Settings;
 using Core.Repositories;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.EntityFrameworkCore;
@@ -10,20 +11,29 @@ using Shared.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// 1. Configuracion de base de datos
+// Configuracion de Base de Datos
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
-builder.Services.AddDbContext<eVote360ProContext>(options =>
-    options.UseSqlServer(connectionString));
+builder.Services.AddDbContext<eVote360ProContext>(options => options.UseSqlServer(connectionString));
 
-// 2. Configuracion de autenticacion
+// Configuracion de EmailSettings para el servicio de correos
+builder.Services.Configure<EmailSettings>(builder.Configuration.GetSection("EmailSettings"));
+
+// Configuracion de Autenticacion
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
-    .AddCookie(options =>
-    {
+    .AddCookie(options => {
         options.LoginPath = "/Usuario/Login";
-        options.AccessDeniedPath = "/Usuario/AccesoDenegado";
+        options.AccessDeniedPath = "/Home/Index";
     });
 
-// 3. Inyeccion de Dependencias
+// Configuracion de Sesion
+builder.Services.AddDistributedMemoryCache();
+builder.Services.AddSession(options => {
+    options.IdleTimeout = TimeSpan.FromMinutes(30);
+    options.Cookie.HttpOnly = true;
+    options.Cookie.IsEssential = true;
+});
+
+// Inyeccion de Dependencias
 builder.Services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
 builder.Services.AddScoped<IOcrService, TesseractOcrService>();
 builder.Services.AddScoped<IEmailService, EmailService>();
@@ -36,15 +46,14 @@ builder.Services.AddScoped<IAlianzaPoliticaService, AlianzaPoliticaService>();
 builder.Services.AddScoped<IAsignacionCandidatoPuestoService, AsignacionCandidatoPuestoService>();
 builder.Services.AddScoped<IEleccionService, EleccionService>();
 builder.Services.AddScoped<IElectorService, ElectorService>();
-
-// Registramos el servicio que faltaba
 builder.Services.AddScoped<ICandidatoService, CandidatoService>();
+builder.Services.AddHttpContextAccessor();
 
 builder.Services.AddControllersWithViews();
 
 var app = builder.Build();
 
-// 4. Configuracion del pipeline de la aplicacion
+// Configuracion del Pipeline de Middleware
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Home/Error");
@@ -55,12 +64,11 @@ app.UseHttpsRedirection();
 app.UseStaticFiles();
 app.UseRouting();
 
-// 5. Activacion de Auth
+// EL ORDEN ES CRITICO PARA AUTENTICACION Y SESION
+app.UseSession();
 app.UseAuthentication();
 app.UseAuthorization();
 
-app.MapControllerRoute(
-    name: "default",
-    pattern: "{controller=Home}/{action=Index}/{id?}");
+app.MapControllerRoute(name: "default", pattern: "{controller=Home}/{action=Index}/{id?}");
 
 app.Run();

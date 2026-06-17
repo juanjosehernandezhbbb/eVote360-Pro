@@ -20,6 +20,7 @@ namespace Application.Services
         private readonly IGenericRepository<PuestoElectivo> _puestoRepo;
         private readonly IGenericRepository<CandidatoPuesto> _asignacionRepo;
         private readonly IGenericRepository<Voto> _votoRepo;
+        private readonly IGenericRepository<DetalleVoto> _detalleVotoRepo; // Inyectado para guardar el desglose del voto
         private readonly IOcrService _ocrService;
         private readonly IEmailService _emailService;
 
@@ -31,6 +32,7 @@ namespace Application.Services
             IGenericRepository<PuestoElectivo> puestoRepo,
             IGenericRepository<CandidatoPuesto> asignacionRepo,
             IGenericRepository<Voto> votoRepo,
+            IGenericRepository<DetalleVoto> detalleVotoRepo, // Parámetro agregado
             IOcrService ocrService,
             IEmailService emailService)
         {
@@ -41,6 +43,7 @@ namespace Application.Services
             _puestoRepo = puestoRepo;
             _asignacionRepo = asignacionRepo;
             _votoRepo = votoRepo;
+            _detalleVotoRepo = detalleVotoRepo; // Asignación agregada
             _ocrService = ocrService;
             _emailService = emailService;
         }
@@ -54,12 +57,12 @@ namespace Application.Services
             var ciudadanos = await _ciudadanoRepo.GetAllAsync();
             var ciudadano = ciudadanos.FirstOrDefault(c => c.NumeroDocumento == numeroDocumento);
 
-            if (ciudadano == null) throw new Exception("No existe un ciudadano registrado con este número de documento."); 
-            if (!ciudadano.Estado) throw new Exception("Este ciudadano se encuentra inactivo y no puede participar en el proceso de votación."); 
+            if (ciudadano == null) throw new Exception("No existe un ciudadano registrado con este número de documento.");
+            if (!ciudadano.Estado) throw new Exception("Este ciudadano se encuentra inactivo y no puede participar en el proceso de votación.");
 
             // 3. Validar que no haya votado ya
             bool yaVoto = await _votacionCiudadanoRepo.ExistsAsync(vc => vc.CiudadanoId == ciudadano.Id && vc.EleccionId == eleccionActiva.Id);
-            if (yaVoto) throw new Exception("Ya ha ejercido su derecho al voto."); 
+            if (yaVoto) throw new Exception("Ya ha ejercido su derecho al voto.");
         }
 
         public async Task<bool> ValidarIdentidadOcrAsync(string numeroDocumento, Stream imagenCedula)
@@ -67,14 +70,14 @@ namespace Application.Services
             await ValidarDocumentoAsync(numeroDocumento); // Re-validar estado base
 
             // Llamar al servicio de OCR
-            string textoExtraido = await _ocrService.ExtraerTextoDeImagenAsync(imagenCedula); 
+            string textoExtraido = await _ocrService.ExtraerTextoDeImagenAsync(imagenCedula);
 
             // Limpiar el texto extraído (quitar espacios, guiones, saltos de línea)
             string textoLimpio = new string(textoExtraido.Where(char.IsLetterOrDigit).ToArray());
 
             if (!textoLimpio.Contains(numeroDocumento))
             {
-                throw new Exception("Los datos extraídos de la foto no coinciden con los datos previamente ingresados por el elector."); 
+                throw new Exception("Los datos extraídos de la foto no coinciden con los datos previamente ingresados por el elector.");
             }
 
             return true;
@@ -87,10 +90,10 @@ namespace Application.Services
             var ciudadano = ciudadanos.FirstOrDefault(c => c.NumeroDocumento == numeroDocumento);
 
             if (string.IsNullOrEmpty(ciudadano.Email))
-                throw new Exception("Este ciudadano no tiene un correo electrónico registrado. No es posible continuar con la verificación de identidad."); 
+                throw new Exception("Este ciudadano no tiene un correo electrónico registrado. No es posible continuar con la verificación de identidad.");
 
             // Generar código de 6 dígitos
-            string codigo = new Random().Next(100000, 999999).ToString(); 
+            string codigo = new Random().Next(100000, 999999).ToString();
 
             var nuevoCodigo = new CodigoVerificacion
             {
@@ -98,15 +101,15 @@ namespace Application.Services
                 EleccionId = eleccionActiva.Id,
                 Codigo = codigo,
                 FechaGeneracion = DateTime.Now,
-                FechaExpiracion = DateTime.Now.AddMinutes(5), 
+                FechaExpiracion = DateTime.Now.AddMinutes(5),
                 Usado = false
-            }; 
+            };
 
             await _codigoRepo.AddAsync(nuevoCodigo);
 
             // Enviar correo
             string asunto = "Código de verificación para votar";
-            string cuerpo = $"Hola {ciudadano.Nombre},<br/><br/>Su código de verificación para continuar con el proceso de votación es: <b>{codigo}</b><br/><br/>Este código tendrá una vigencia de 5 minutos.<br/>Si usted no inició este proceso, ignore este mensaje."; 
+            string cuerpo = $"Hola {ciudadano.Nombre},<br/><br/>Su código de verificación para continuar con el proceso de votación es: <b>{codigo}</b><br/><br/>Este código tendrá una vigencia de 5 minutos.<br/>Si usted no inició este proceso, ignore este mensaje.";
 
             await _emailService.EnviarCorreoAsync(ciudadano.Email, asunto, cuerpo);
         }
@@ -123,7 +126,7 @@ namespace Application.Services
                                   .FirstOrDefault();
 
             if (codigoBD == null || codigoBD.Codigo != codigo)
-                throw new Exception("El código de verificación ingresado no es válido."); 
+                throw new Exception("El código de verificación ingresado no es válido.");
 
             if (codigoBD.Usado)
                 throw new Exception("Este código de verificación ya fue utilizado.");
@@ -137,13 +140,13 @@ namespace Application.Services
             return true;
         }
 
-        // Fíjate que unifiqué los métodos de votación de la interfaz en uno solo para guardar la boleta completa
         public async Task FinalizarVotacionAsync(int ciudadanoId, List<SeleccionVotoDto> selecciones)
         {
             var eleccionActiva = await ObtenerEleccionActivaAsync();
 
             bool yaVoto = await _votacionCiudadanoRepo.ExistsAsync(vc => vc.CiudadanoId == ciudadanoId && vc.EleccionId == eleccionActiva.Id);
-            if (yaVoto) throw new Exception("Ya ha ejercido su derecho al voto."); 
+            if (yaVoto) throw new Exception("Ya ha ejercido su derecho al voto.");
+
             // Validar que haya seleccionado una opción por cada puesto disponible
             var puestosActivos = (await _puestoRepo.GetAllAsync()).Where(p => p.Estado).ToList();
             var puestosFaltantes = puestosActivos.Where(p => !selecciones.Any(s => s.PuestoElectivoId == p.Id)).ToList();
@@ -151,7 +154,7 @@ namespace Application.Services
             if (puestosFaltantes.Any())
             {
                 var nombresFaltantes = string.Join(", ", puestosFaltantes.Select(p => p.Nombre));
-                throw new Exception($"Debe completar su selección para los siguientes puestos electivos: {nombresFaltantes}."); 
+                throw new Exception($"Debe completar su selección para los siguientes puestos electivos: {nombresFaltantes}.");
             }
 
             // 1. Crear el registro principal del Voto
@@ -164,8 +167,19 @@ namespace Application.Services
 
             await _votoRepo.AddAsync(nuevoVoto);
 
+            // 2. Guardar cada selección de la boleta en el detalle de la base de datos
+            foreach (var sel in selecciones)
+            {
+                var detalle = new DetalleVoto
+                {
+                    VotoId = nuevoVoto.Id,
+                    PuestoElectivoId = sel.PuestoElectivoId,
+                    CandidatoId = sel.CandidatoId // Puede ser nulo si eligió "Ninguno"
+                };
+                await _detalleVotoRepo.AddAsync(detalle);
+            }
 
-            // 2. Marcar al ciudadano como que ya votó
+            // 3. Marcar al ciudadano como que ya votó
             var votacionCiudadano = new VotacionCiudadano
             {
                 CiudadanoId = ciudadanoId,
@@ -176,8 +190,8 @@ namespace Application.Services
             };
             await _votacionCiudadanoRepo.AddAsync(votacionCiudadano);
 
-            // 3. Enviar correo de resumen
-            await EnviarResumenVotacionAsync(ciudadanoId, eleccionActiva.Id, selecciones); 
+            // 4. Enviar correo de resumen
+            await EnviarResumenVotacionAsync(ciudadanoId, eleccionActiva.Id, selecciones);
         }
 
         // --- Métodos Privados ---
@@ -202,8 +216,8 @@ namespace Application.Services
             var puestos = await _puestoRepo.GetAllAsync();
 
             var sb = new StringBuilder();
-            sb.Append($"Hola {ciudadano.Nombre},<br/><br/>Su proceso de votación ha sido completado correctamente.<br/><br/><b>Resumen de selección:</b><br/>"); 
-            sb.Append($"Elección: {eleccion.Nombre}<br/><br/>"); 
+            sb.Append($"Hola {ciudadano.Nombre},<br/><br/>Su proceso de votación ha sido completado correctamente.<br/><br/><b>Resumen de selección:</b><br/>");
+            sb.Append($"Elección: {eleccion.Nombre}<br/><br/>");
 
             foreach (var seleccion in selecciones)
             {
@@ -216,19 +230,19 @@ namespace Application.Services
                     var asignacion = asignaciones.FirstOrDefault(a => a.CandidatoId == seleccion.CandidatoId && a.PuestoElectivoId == seleccion.PuestoElectivoId);
                     if (asignacion != null && asignacion.Candidato != null)
                     {
-                        nombreCandidato = $"{asignacion.Candidato.Nombre} {asignacion.Candidato.Apellido}"; 
-                        nombrePartido = asignacion.PartidoPolitico != null ? asignacion.PartidoPolitico.Nombre : "Sin Partido"; 
+                        nombreCandidato = $"{asignacion.Candidato.Nombre} {asignacion.Candidato.Apellido}";
+                        nombrePartido = asignacion.PartidoPolitico != null ? asignacion.PartidoPolitico.Nombre : "Sin Partido";
                     }
                 }
 
-                sb.Append($"Puesto: {puesto?.Nombre}<br/>"); 
+                sb.Append($"Puesto: {puesto?.Nombre}<br/>");
                 sb.Append($"Selección: {nombreCandidato}<br/>");
-                sb.Append($"Partido: {nombrePartido}<br/><br/>"); 
+                sb.Append($"Partido: {nombrePartido}<br/><br/>");
             }
 
-            sb.Append("Gracias por ejercer su derecho al voto."); 
+            sb.Append("Gracias por ejercer su derecho al voto.");
 
-            await _emailService.EnviarCorreoAsync(ciudadano.Email, "Resumen de su participación electoral", sb.ToString()); 
+            await _emailService.EnviarCorreoAsync(ciudadano.Email, "Resumen de su participación electoral", sb.ToString());
         }
     }
 }

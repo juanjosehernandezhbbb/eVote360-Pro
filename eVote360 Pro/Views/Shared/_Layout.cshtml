@@ -6,34 +6,39 @@
     <title>@ViewData["Title"] - eVote360 Pro</title>
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
 </head>
 <body>
     <div class="d-flex" id="wrapper">
+        
         @if (User.Identity.IsAuthenticated)
         {
             <div class="bg-dark border-right" id="sidebar-wrapper" style="min-height: 100vh; width: 250px;">
-                <div class="sidebar-heading text-light p-3">eVote360 Pro</div>
+                <div class="sidebar-heading text-light p-3 border-bottom">eVote360 Pro</div>
                 <div class="list-group list-group-flush">
                     <a class="list-group-item list-group-item-action bg-dark text-light" asp-controller="Home" asp-action="Index">Inicio</a>
                     
-                    <h6 class="text-secondary px-3 mt-3">Catalogos</h6>
-                    <a class="list-group-item list-group-item-action bg-dark text-light" asp-controller="Ciudadano" asp-action="Index">Ciudadanos</a>
-                    <a class="list-group-item list-group-item-action bg-dark text-light" asp-controller="PartidoPolitico" asp-action="Index">Partidos Politicos</a>
-                    <a class="list-group-item list-group-item-action bg-dark text-light" asp-controller="PuestoElectivo" asp-action="Index">Puestos Electivos</a>
-                    <a class="list-group-item list-group-item-action bg-dark text-light" asp-controller="Usuario" asp-action="Index">Usuarios</a>
+                    @if (User.IsInRole("Admin"))
+                    {
+                        <h6 class="text-secondary px-3 mt-3">Catálogos</h6>
+                        <a class="list-group-item list-group-item-action bg-dark text-light" asp-controller="Ciudadano" asp-action="Index">Ciudadanos</a>
+                        <a class="list-group-item list-group-item-action bg-dark text-light" asp-controller="PartidoPolitico" asp-action="Index">Partidos Políticos</a>
+                        <a class="list-group-item list-group-item-action bg-dark text-light" asp-controller="PuestoElectivo" asp-action="Index">Puestos Electivos</a>
+                        <a class="list-group-item list-group-item-action bg-dark text-light" asp-controller="Usuario" asp-action="Index">Usuarios</a>
 
-                    <h6 class="text-secondary px-3 mt-3">Gestion</h6>
-                    <a class="list-group-item list-group-item-action bg-dark text-light" asp-controller="Eleccion" asp-action="Index">Elecciones</a>
+                        <h6 class="text-secondary px-3 mt-3">Gestión Exclusiva</h6>
+                        <a class="list-group-item list-group-item-action bg-dark text-light" asp-controller="Eleccion" asp-action="Index">Elecciones</a>
+                        <a class="list-group-item list-group-item-action bg-dark text-light" asp-controller="AsignacionDirigente" asp-action="Index">Asignar Dirigentes</a>
+                    }
+
+                    <h6 class="text-secondary px-3 mt-3">Gestión de Partido</h6>
                     <a class="list-group-item list-group-item-action bg-dark text-light" asp-controller="Candidato" asp-action="Index">Candidatos</a>
-                    <a class="list-group-item list-group-item-action bg-dark text-light" asp-controller="Alianza" asp-action="Index">Alianzas Politicas</a>
+                    <a class="list-group-item list-group-item-action bg-dark text-light" asp-controller="Alianza" asp-action="Index">Alianzas Políticas</a>
                     <a class="list-group-item list-group-item-action bg-dark text-light" asp-controller="Asignacion" asp-action="Index">Asignar Candidatos</a>
-                    <a class="list-group-item list-group-item-action bg-dark text-light" asp-controller="AsignacionDirigente" asp-action="Index">Asignar Dirigentes</a>
-                    
-                    <!-- Enlace corregido para el nuevo controlador de resultados -->
                     <a class="list-group-item list-group-item-action bg-dark text-light" asp-controller="ResultadosElectorales" asp-action="Index">Resultados Electorales</a>
 
                     <hr class="text-light mt-3" />
-                    <a class="list-group-item list-group-item-action bg-dark text-danger" asp-controller="Usuario" asp-action="Logout">Cerrar Sesion</a>
+                    <a class="list-group-item list-group-item-action bg-dark text-danger" asp-controller="Usuario" asp-action="Logout">Cerrar Sesión</a>
                 </div>
             </div>
         }
@@ -41,14 +46,17 @@
         <div id="page-content-wrapper" class="flex-grow-1">
             <nav class="navbar navbar-expand-lg navbar-light bg-light border-bottom">
                 <div class="container-fluid">
-                    <span class="navbar-brand">Panel de Control</span>
+                    <span class="navbar-brand fw-bold">eVote360 Pro</span>
+                    @if (User.Identity.IsAuthenticated) {
+                        <span class="navbar-text">Hola, @User.Identity.Name</span>
+                    }
                 </div>
             </nav>
 
             <div class="container-fluid p-4">
-                <nav role="main">
+                <main role="main">
                     @RenderBody()
-                </nav>
+                </main>
             </div>
         </div>
     </div>
@@ -57,6 +65,7 @@
         &copy; 2026 - eVote360 Pro
     </footer>
 
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     @await RenderSectionAsync("Scripts", required: false)

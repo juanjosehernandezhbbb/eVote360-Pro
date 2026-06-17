@@ -14,5 +14,7 @@ namespace Application.Interfaces
         Task CrearAsync(CiudadanoDto dto);
         Task ActualizarAsync(CiudadanoDto dto);
         Task CambiarEstadoAsync(int id, bool nuevoEstado);
+        Task<CiudadanoDto> ProcesarOcrAsync(Stream fileStream);
+        Task RegistrarAutonomoAsync(CiudadanoDto dto);
     }
 }

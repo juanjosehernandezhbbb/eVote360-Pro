@@ -1,0 +1,59 @@
+﻿@{
+    ViewData["Title"] = "Verificacion de Codigo";
+}
+
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card shadow-sm">
+                <div class="card-header bg-warning text-dark text-center">
+                    <h4>Verificacion de Seguridad</h4>
+                </div>
+                <div class="card-body p-4">
+                    <p class="text-center">
+                        Hemos enviado un codigo de verificacion de 6 digitos a su correo electronico registrado.
+                    </p>
+                    <p class="text-danger text-center small fw-bold">
+                        El codigo expirara en 5 minutos.
+                    </p>
+
+                    @if (ViewBag.Error != null)
+                    {
+                        <div class="alert alert-danger text-center" role="alert">
+                            @ViewBag.Error
+                        </div>
+                    }
+
+                    <form asp-action="VerificarCodigo" method="post">
+                        @Html.AntiForgeryToken()
+
+                        <div class="mb-4">
+                            <label for="codigo" class="form-label fw-bold text-center d-block">Ingrese el Codigo Recibido:</label>
+                            <input type="text" 
+                                   id="codigo" 
+                                   name="codigo" 
+                                   class="form-control form-control-lg text-center fw-bold" 
+                                   style="letter-spacing: 5px; font-size: 1.5rem;"
+                                   maxlength="6" 
+                                   placeholder="000000" 
+                                   required 
+                                   autocomplete="off" />
+                        </div>
+
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-success btn-lg">
+                                Verificar e Ingresar a la Boleta
+                            </button>
+                            <a asp-action="Iniciar" class="btn btn-outline-secondary btn-sm">
+                                Volver Atras
+                            </a>
+                        </div>
+                    </form>
+                </div>
+                <div class="card-footer text-center text-muted small">
+                    Si no recibe el correo, verifique su bandeja de correo no deseado (Spam).
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

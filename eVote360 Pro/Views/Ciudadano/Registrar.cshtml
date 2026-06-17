@@ -1,0 +1,64 @@
+﻿@model eVote360_Pro.ViewModels.RegistroCiudadanoViewModel
+
+@{
+    ViewData["Title"] = "Registro de Ciudadano";
+}
+
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6 col-lg-5">
+            <div class="card shadow-sm border-0 rounded-3">
+                <div class="card-header bg-success text-white text-center py-3">
+                    <h5 class="mb-0 fw-bold">
+                        <i class="fas fa-id-card me-2"></i> Registro de Ciudadano
+                    </h5>
+                </div>
+                <div class="card-body p-4">
+                    
+                    <div class="text-center mb-4">
+                        <p class="text-muted">
+                            Por favor, sube una foto clara de tu documento de identidad para extraer los datos de forma automática.
+                        </p>
+                    </div>
+
+                    @if (!ViewData.ModelState.IsValid)
+                    {
+                        <div class="alert alert-danger alert-dismissible fade show shadow-sm text-start" role="alert">
+                            <i class="fas fa-exclamation-triangle me-2"></i>
+                            <div asp-validation-summary="All" class="d-inline-block mb-0"></div>
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    }
+
+                    <form asp-action="Registrar" method="post" enctype="multipart/form-data">
+                        @Html.AntiForgeryToken()
+                        
+                        <div class="mb-4">
+                            <label class="form-label fw-semibold text-secondary">Imagen del Documento</label>
+                            <div class="input-group shadow-sm">
+                                <span class="input-group-text bg-light text-muted">
+                                    <i class="fas fa-camera"></i>
+                                </span>
+                                <input type="file" name="DocumentoImagen" id="DocumentoImagen" class="form-control" accept="image/*" required />
+                            </div>
+                            <div class="form-text mt-2 small text-muted">
+                                <i class="fas fa-info-circle me-1"></i> Asegúrate de que el texto sea legible y sin reflejos.
+                            </div>
+                        </div>
+
+                        <div class="d-grid gap-2 mt-4">
+                            <button type="submit" class="btn btn-success py-2 fw-bold shadow-sm">
+                                <i class="fas fa-cogs me-2"></i> Procesar Imagen
+                            </button>
+                            
+                            <a asp-controller="Home" asp-action="Index" class="btn btn-outline-secondary py-2 fw-bold shadow-sm">
+                                <i class="fas fa-times me-2"></i> Cancelar
+                            </a>
+                        </div>
+                    </form>
+
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

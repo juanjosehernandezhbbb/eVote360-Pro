@@ -6,7 +6,6 @@ using Core.Repositories;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace Application.Services
@@ -124,15 +123,17 @@ namespace Application.Services
             await ValidarEleccionActivaAsync("eliminar una solicitud de alianza");
 
             var solicitud = await _alianzaRepo.GetByIdAsync(solicitudId);
-            if (solicitud == null) throw new Exception("La solicitud de alianza seleccionada no existe o ya fue eliminada.");
+
+            if (solicitud == null)
+                throw new Exception("La solicitud no existe.");
 
             if (solicitud.PartidoSolicitanteId != partidoUsuarioId)
-                throw new Exception("No tiene permisos para eliminar esta solicitud de alianza.");
+                throw new Exception("No tiene permisos.");
 
             if (solicitud.Estado == (int)EstadoSolicitudAlianza.Aceptada)
-                throw new Exception("No se puede eliminar una solicitud aceptada porque ya generó una alianza vigente. Para terminarla debe eliminar la alianza desde el listado de alianzas vigentes.");
+                throw new Exception("No se puede eliminar una solicitud aceptada.");
 
-            throw new NotImplementedException("Falta método RemoveAsync en el repositorio genérico.");
+            await _alianzaRepo.RemoveAsync(solicitud);
         }
 
         public async Task EliminarAlianzaVigenteAsync(int alianzaId, int partidoUsuarioId)
@@ -141,50 +142,62 @@ namespace Application.Services
 
             var alianza = await _alianzaRepo.GetByIdAsync(alianzaId);
             if (alianza == null || alianza.Estado != (int)EstadoSolicitudAlianza.Aceptada)
-                throw new Exception("La alianza política seleccionada no existe o ya fue eliminada.");
+                throw new Exception("La alianza no existe o no es válida.");
 
             if (alianza.PartidoSolicitanteId != partidoUsuarioId && alianza.PartidoReceptorId != partidoUsuarioId)
-                throw new Exception("No tiene permisos para eliminar esta alianza política.");
+                throw new Exception("No tiene permisos.");
 
-            // Regla: No se puede eliminar si hay candidatos aliados asignados
+            // Regla de negocio existente
             int elOtroPartidoId = alianza.PartidoSolicitanteId == partidoUsuarioId ? alianza.PartidoReceptorId : alianza.PartidoSolicitanteId;
 
-            // Busca si hay algún candidato del partidoUsuarioId ocupando un puesto en elOtroPartidoId (o viceversa)
             bool hayAsignacionesCruzadas = await _candidatoPuestoRepo.ExistsAsync(cp =>
                 (cp.PartidoPoliticoId == partidoUsuarioId && cp.Candidato.PartidoPoliticoId == elOtroPartidoId) ||
                 (cp.PartidoPoliticoId == elOtroPartidoId && cp.Candidato.PartidoPoliticoId == partidoUsuarioId));
 
             if (hayAsignacionesCruzadas)
-                throw new Exception("No se puede eliminar esta alianza porque existen candidatos aliados asignados entre estos partidos. Primero deben eliminarse las asignaciones correspondientes.");
+                throw new Exception("No se puede eliminar: existen candidatos aliados asignados.");
 
-            // Si tu repositorio no tiene DeleteAsync/RemoveAsync, debes crearlo.
-            throw new NotImplementedException("Falta método RemoveAsync en el repositorio genérico.");
+            await _alianzaRepo.RemoveAsync(alianza);
         }
 
-        // --- Métodos de Lectura ---
+        // ==========================================
+        // MÉTODOS DE LECTURA ACTUALIZADOS
+        // ==========================================
         public async Task<IEnumerable<SolicitudAlianzaDto>> ObtenerSolicitudesPendientesAsync(int partidoId)
         {
             var todas = await _alianzaRepo.GetAllAsync();
+            var partidos = await _partidoRepo.GetAllAsync(); // Obtenemos el catálogo para cruzar nombres
+
             return todas.Where(a => a.PartidoReceptorId == partidoId && a.Estado == (int)EstadoSolicitudAlianza.Pendiente)
-                        .Select(MapearADto).ToList();
+                        .Select(a => MapearADto(a, partidos)).ToList();
         }
 
         public async Task<IEnumerable<SolicitudAlianzaDto>> ObtenerSolicitudesRealizadasAsync(int partidoId)
         {
             var todas = await _alianzaRepo.GetAllAsync();
+            var partidos = await _partidoRepo.GetAllAsync(); // Obtenemos el catálogo para cruzar nombres
+
             return todas.Where(a => a.PartidoSolicitanteId == partidoId)
-                        .Select(MapearADto).ToList();
+                        .Select(a => MapearADto(a, partidos)).ToList();
         }
 
         public async Task<IEnumerable<SolicitudAlianzaDto>> ObtenerAlianzasVigentesAsync(int partidoId)
         {
             var todas = await _alianzaRepo.GetAllAsync();
+            var partidos = await _partidoRepo.GetAllAsync(); // Obtenemos el catálogo para cruzar nombres
+
             return todas.Where(a => (a.PartidoSolicitanteId == partidoId || a.PartidoReceptorId == partidoId) && a.Estado == (int)EstadoSolicitudAlianza.Aceptada)
-                        .Select(MapearADto).ToList();
+                        .Select(a => MapearADto(a, partidos)).ToList();
         }
 
-        private SolicitudAlianzaDto MapearADto(SolicitudAlianza a)
+        // ==========================================
+        // MÉTODO DE MAPEO ACTUALIZADO
+        // ==========================================
+        private SolicitudAlianzaDto MapearADto(SolicitudAlianza a, IEnumerable<PartidoPolitico> partidos)
         {
+            var partidoSolicitante = partidos.FirstOrDefault(p => p.Id == a.PartidoSolicitanteId);
+            var partidoReceptor = partidos.FirstOrDefault(p => p.Id == a.PartidoReceptorId);
+
             return new SolicitudAlianzaDto
             {
                 Id = a.Id,
@@ -193,11 +206,11 @@ namespace Application.Services
                 Estado = a.Estado,
                 FechaSolicitud = a.FechaSolicitud,
                 FechaRespuesta = a.FechaRespuesta,
-                // Nota: Tu repositorio necesitaría usar .Include() para llenar estos nombres
-                NombrePartidoSolicitante = a.PartidoSolicitante != null ? a.PartidoSolicitante.Nombre : "N/A",
-                SiglasPartidoSolicitante = a.PartidoSolicitante != null ? a.PartidoSolicitante.Siglas : "N/A",
-                NombrePartidoReceptor = a.PartidoReceptor != null ? a.PartidoReceptor.Nombre : "N/A",
-                SiglasPartidoReceptor = a.PartidoReceptor != null ? a.PartidoReceptor.Siglas : "N/A"
+
+                NombrePartidoSolicitante = partidoSolicitante != null ? partidoSolicitante.Nombre : "Desconocido",
+                SiglasPartidoSolicitante = partidoSolicitante != null ? partidoSolicitante.Siglas : "",
+                NombrePartidoReceptor = partidoReceptor != null ? partidoReceptor.Nombre : "Desconocido",
+                SiglasPartidoReceptor = partidoReceptor != null ? partidoReceptor.Siglas : ""
             };
         }
 

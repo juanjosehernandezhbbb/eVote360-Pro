@@ -1,29 +1,38 @@
 ﻿@{
-    ViewData["Title"] = "Inicio";
+    ViewData["Title"] = "Bienvenido a eVote360 Pro";
 }
 
 <div class="text-center mt-5">
-    <h1 class="display-4">eVote360 Pro</h1>
-    <p class="lead">Sistema integral de gestión y votación electrónica.</p>
+    <h1 class="display-3 fw-bold text-primary">eVote360 Pro</h1>
+    <p class="lead mt-3">Tu voz, tu voto, tu futuro. Sistema integral de gestión electoral.</p>
     
-    <div class="alert alert-info mt-4">
-        <h4>@ViewBag.MensajeBienvenida</h4>
-    </div>
+    @* SOLUCIÓN: El cuadro blanco solo se dibuja si el mensaje no está vacío *@
+    @if (!string.IsNullOrEmpty(ViewBag.MensajeBienvenida))
+    {
+        <div class="alert alert-light mt-4 border shadow-sm d-inline-block px-5 py-3">
+            <h5 class="mb-0 text-secondary">@ViewBag.MensajeBienvenida</h5>
+        </div>
+    }
 
     @if (!User.Identity.IsAuthenticated)
     {
-        <div class="mt-4">
-            <a asp-controller="Usuario" asp-action="Login" class="btn btn-primary btn-lg">Iniciar Sesión</a>
+        <div class="mt-5 d-flex justify-content-center gap-3">
+            <a asp-controller="Usuario" asp-action="Login" class="btn btn-primary btn-lg px-4 py-2 shadow-sm">
+                <i class="fas fa-sign-in-alt me-2"></i> Iniciar Sesión
+            </a>
+            <a asp-controller="Ciudadano" asp-action="Registrar" class="btn btn-success btn-lg px-4 py-2 shadow-sm">
+                <i class="fas fa-user-plus me-2"></i> Registrarse como Ciudadano
+            </a>
         </div>
     }
     else
     {
         <div class="row mt-5">
             <div class="col-md-6 offset-md-3">
-                <div class="card">
-                    <div class="card-body">
-                        <h5 class="card-title">Acceso Rápido</h5>
-                        <p class="card-text">Utilice el menú lateral para acceder a las funciones disponibles según su perfil de usuario.</p>
+                <div class="card shadow-sm border-0">
+                    <div class="card-body p-4">
+                        <h5 class="card-title text-primary"><i class="fas fa-tachometer-alt"></i> Acceso Rápido</h5>
+                        <p class="card-text text-muted">Utilice el menú lateral para acceder a las funciones disponibles según su perfil de usuario.</p>
                     </div>
                 </div>
             </div>

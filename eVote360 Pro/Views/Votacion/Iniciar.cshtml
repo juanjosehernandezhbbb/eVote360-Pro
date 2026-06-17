@@ -1,0 +1,51 @@
+﻿@{
+    ViewData["Title"] = "Identificacion del Elector";
+}
+
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white text-center">
+                    <h4>Proceso de Votacion Electronica</h4>
+                </div>
+                <div class="card-body p-4">
+                    <p class="text-muted text-center">
+                        Por favor, ingrese su numero de documento de identidad (Cedula) para verificar su registro en el padron electoral.
+                    </p>
+
+                    @if (ViewBag.Error != null)
+                    {
+                        <div class="alert alert-danger text-center" role="alert">
+                            @ViewBag.Error
+                        </div>
+                    }
+
+                    <form asp-action="Iniciar" method="post">
+                        @Html.AntiForgeryToken()
+                        
+                        <div class="mb-4">
+                            <label for="numeroDocumento" class="form-label fw-bold">Numero de Documento:</label>
+                            <input type="text" 
+                                   id="numeroDocumento" 
+                                   name="numeroDocumento" 
+                                   class="form-control form-control-lg text-center" 
+                                   placeholder="Ej: 00100000000" 
+                                   required 
+                                   autocomplete="off" />
+                        </div>
+
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary btn-lg">
+                                Validar Documento
+                            </button>
+                        </div>
+                    </form>
+                </div>
+                <div class="card-footer text-center text-muted small">
+                    eVote360 Pro - Sistema Seguro de Votacion
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

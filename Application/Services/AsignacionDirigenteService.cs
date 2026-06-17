@@ -27,6 +27,28 @@ namespace Application.Services
             _partidoRepo = partidoRepo;
         }
 
+        public async Task<IEnumerable<AsignacionDirigenteDto>> ObtenerTodosAsync()
+        {
+            // CAMBIO CLAVE: Usamos GetAllWithIncludesAsync para que traiga la información de las tablas vinculadas
+            var asignaciones = await _asignacionRepo.GetAllWithIncludesAsync(
+                x => x.Usuario,
+                x => x.PartidoPolitico
+            );
+
+            return asignaciones.Select(a => new AsignacionDirigenteDto
+            {
+                Id = a.Id,
+                UsuarioId = a.UsuarioId,
+                PartidoPoliticoId = a.PartidoPoliticoId,
+                NombreDirigente = a.Usuario != null ? $"{a.Usuario.Nombre} {a.Usuario.Apellido}" : "N/A",
+                NombreUsuario = a.Usuario != null ? a.Usuario.NombreUsuario : "N/A",
+                NombrePartido = a.PartidoPolitico != null ? a.PartidoPolitico.Nombre : "N/A",
+                SiglasPartido = a.PartidoPolitico != null ? a.PartidoPolitico.Siglas : "N/A",
+                EstadoDirigente = a.Usuario != null && a.Usuario.Estado,
+                EstadoPartido = a.PartidoPolitico != null && a.PartidoPolitico.Estado
+            }).ToList();
+        }
+
         public async Task AsignarAsync(int usuarioId, int partidoPoliticoId)
         {
             // 1. Validar que el usuario existe, está activo y es Dirigente
@@ -65,31 +87,8 @@ namespace Application.Services
             var asignacion = await _asignacionRepo.GetByIdAsync(asignacionId);
             if (asignacion == null) throw new Exception("Asignación no encontrada.");
 
-            // En un caso real, aquí el IGenericRepository necesitaría un método RemoveAsync(T entity).
-            // Si no lo tienes en tu interfaz, debes agregarlo al Core y a la implementación de Persistance.
-            throw new NotImplementedException("Falta agregar el método DeleteAsync/RemoveAsync al IGenericRepository para completar esta acción.");
-        }
-
-        public async Task<IEnumerable<AsignacionDirigenteDto>> ObtenerTodosAsync()
-        {
-            var asignaciones = await _asignacionRepo.GetAllAsync();
-
-            // Nota: Para que estos datos expandidos funcionen perfectamente, tu IGenericRepository 
-            // necesitaría incluir (Include) las entidades Usuario y PartidoPolitico. 
-            // Si tu GetAllAsync actual no soporta .Include(), tendrás que hacer la consulta manual o agregar soporte a Includes.
-
-            return asignaciones.Select(a => new AsignacionDirigenteDto
-            {
-                Id = a.Id,
-                UsuarioId = a.UsuarioId,
-                PartidoPoliticoId = a.PartidoPoliticoId,
-                NombreDirigente = a.Usuario != null ? $"{a.Usuario.Nombre} {a.Usuario.Apellido}" : "N/A",
-                NombreUsuario = a.Usuario != null ? a.Usuario.NombreUsuario : "N/A",
-                NombrePartido = a.PartidoPolitico != null ? a.PartidoPolitico.Nombre : "N/A",
-                SiglasPartido = a.PartidoPolitico != null ? a.PartidoPolitico.Siglas : "N/A",
-                EstadoDirigente = a.Usuario != null && a.Usuario.Estado,
-                EstadoPartido = a.PartidoPolitico != null && a.PartidoPolitico.Estado
-            }).ToList();
+            // CORRECCIÓN: Implementación del método de eliminación usando tu repositorio
+            await _asignacionRepo.RemoveAsync(asignacion);
         }
     }
 }

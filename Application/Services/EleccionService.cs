@@ -85,8 +85,19 @@ namespace Application.Services
 
         public async Task<IEnumerable<ResultadoPuestoDto>> ObtenerResultadosAsync(int eleccionId)
         {
-            var detallesVoto = await _detalleVotoRepo.GetAllAsync();
-            var votosDeEleccion = detallesVoto.Where(dv => dv.Voto != null && dv.Voto.EleccionId == eleccionId).ToList();
+            // Cambiamos GetAllAsync por una consulta que incluya las tablas relacionadas
+            // Asumiendo que tu repositorio te permite hacer esto o usando IQueryable:
+            var detallesVoto = await _detalleVotoRepo.GetAllWithIncludesAsync(
+                dv => dv.Voto,
+                dv => dv.PuestoElectivo,
+                dv => dv.Candidato,
+                dv => dv.Candidato.PartidoPolitico
+            );
+
+            // Filtramos solo los de la elección actual
+            var votosDeEleccion = detallesVoto
+                .Where(dv => dv.Voto != null && dv.Voto.EleccionId == eleccionId)
+                .ToList();
 
             var resultados = new List<ResultadoPuestoDto>();
 

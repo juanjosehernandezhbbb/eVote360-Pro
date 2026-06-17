@@ -59,9 +59,32 @@
                                     }
                                 </td>
                                 <td class="text-center">
-                                    <a asp-controller="Candidato" asp-action="Edit" asp-route-id="@item.Id" class="btn btn-warning btn-sm">
-                                        <i class="fas fa-edit"></i>
-                                    </a>
+                                    <div class="d-flex justify-content-center align-items-center gap-2">
+                                        
+                                        <a asp-controller="Candidato" asp-action="Edit" asp-route-id="@item.Id" class="btn btn-warning btn-sm text-dark">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
+
+                                        <form asp-controller="Candidato" asp-action="CambiarEstado" method="post" class="m-0 p-0">
+                                            <input type="hidden" name="id" value="@item.Id" />
+                                            
+                                            <input type="hidden" name="estado" value="@(item.Estado ? "false" : "true")" />
+                                            
+                                            @if (item.Estado)
+                                            {
+                                                <button type="submit" class="btn btn-danger btn-sm">
+                                                    <i class="fas fa-user-slash"></i>
+                                                </button>
+                                            }
+                                            else
+                                            {
+                                                <button type="submit" class="btn btn-success btn-sm">
+                                                    <i class="fas fa-user-check"></i>
+                                                </button>
+                                            }
+                                        </form>
+
+                                    </div>
                                 </td>
                             </tr>
                         }

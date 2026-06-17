@@ -1,0 +1,36 @@
+﻿@model IEnumerable<Application.Dtos.CandidatoPuestoDto>
+
+<div class="d-flex justify-content-between align-items-center mt-4">
+    <h2>Mis Asignaciones</h2>
+    <a asp-action="Create" class="btn btn-primary">Nueva Asignación</a>
+</div>
+
+<table class="table table-hover mt-3">
+    <thead class="table-dark">
+        <tr>
+            <th>Candidato</th>
+            <th>Puesto</th>
+            <th>Tipo</th>
+            <th>Acciones</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in Model)
+        {
+            <tr>
+                <td>@item.NombreCandidato @item.ApellidoCandidato</td>
+                <td>@item.NombrePuesto</td>
+                <td>
+                    <span class="badge @(item.TipoCandidatura == "Propio" ? "bg-info" : "bg-warning")">
+                        @item.TipoCandidatura
+                    </span>
+                </td>
+                <td>
+                    <form asp-action="Delete" asp-route-id="@item.Id" method="post">
+                        <button type="submit" class="btn btn-danger btn-sm">Eliminar</button>
+                    </form>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>

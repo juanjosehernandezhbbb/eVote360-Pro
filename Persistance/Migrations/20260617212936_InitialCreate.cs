@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace Persistance.Migrations
 {
     /// <inheritdoc />
-    public partial class InicialCompleta : Migration
+    public partial class InitialCreate : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -87,6 +87,7 @@ namespace Persistance.Migrations
                     NombreUsuario = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
                     PasswordHash = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: false),
                     Rol = table.Column<int>(type: "int", nullable: false),
+                    PartidoPoliticoId = table.Column<int>(type: "int", nullable: true),
                     Nombre = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
                     Estado = table.Column<bool>(type: "bit", nullable: false)
                 },
@@ -332,6 +333,11 @@ namespace Persistance.Migrations
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                 });
+
+            migrationBuilder.InsertData(
+                table: "Usuario",
+                columns: new[] { "Id", "Apellido", "Email", "Estado", "Nombre", "NombreUsuario", "PartidoPoliticoId", "PasswordHash", "Rol" },
+                values: new object[] { 1, "Sistemas", "admin@evote360.com", true, "Admin", "admin", null, "jZae727K08KaOmKSgOaGzww/XVqGr/PKEgIMkjrcbJI=", 1 });
 
             migrationBuilder.CreateIndex(
                 name: "IX_Candidato_PartidoPoliticoId",

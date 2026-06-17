@@ -1,0 +1,103 @@
+﻿@{
+    ViewData["Title"] = "Boleta Electoral";
+    var puestos = ViewBag.Puestos as List<Core.Entities.PuestoElectivo>;
+    var asignaciones = ViewBag.Asignaciones as List<Core.Entities.CandidatoPuesto>;
+}
+
+<div class="container mt-4">
+    <div class="text-center mb-5">
+        <h2 class="fw-bold text-primary">Boleta Electoral Oficial</h2>
+        <p class="text-muted">Seleccione un candidato por cada puesto electivo disponible.</p>
+    </div>
+
+    @if (TempData["ErrorVotacion"] != null)
+    {
+        <div class="alert alert-danger text-center shadow-sm">
+            <strong>Atencion:</strong> @TempData["ErrorVotacion"]
+        </div>
+    }
+
+    <form asp-action="FinalizarVoto" method="post">
+        @Html.AntiForgeryToken()
+
+        <div class="row">
+            @if (puestos != null && puestos.Any())
+            {
+                for (int i = 0; i < puestos.Count; i++)
+                {
+                    var puesto = puestos[i];
+                    var candidatosDelPuesto = asignaciones.Where(a => a.PuestoElectivoId == puesto.Id).ToList();
+
+                    <div class="col-12 mb-4">
+                        <div class="card shadow-sm border-primary">
+                            <div class="card-header bg-primary text-white">
+                                <h4 class="mb-0">@puesto.Nombre</h4>
+                            </div>
+                            <div class="card-body">
+                                <input type="hidden" name="selecciones[@i].PuestoElectivoId" value="@puesto.Id" />
+
+                                <div class="row">
+                                    @if (candidatosDelPuesto.Any())
+                                    {
+                                        foreach (var asignacion in candidatosDelPuesto)
+                                        {
+                                            <div class="col-md-4 col-sm-6 mb-3">
+                                                <div class="form-check p-3 border rounded h-100 d-flex align-items-center bg-light">
+                                                    <input class="form-check-input me-3" 
+                                                           type="radio" 
+                                                           name="selecciones[@i].CandidatoId" 
+                                                           id="cand_@(puesto.Id)_@(asignacion.CandidatoId)" 
+                                                           value="@asignacion.CandidatoId" required>
+                                                    
+                                                    <label class="form-check-label w-100" for="cand_@(puesto.Id)_@(asignacion.CandidatoId)" style="cursor:pointer;">
+                                                        <strong>@asignacion.Candidato.Nombre @asignacion.Candidato.Apellido</strong><br />
+                                                        <span class="badge bg-secondary mt-1">@asignacion.PartidoPolitico.Nombre</span>
+                                                    </label>
+                                                </div>
+                                            </div>
+                                        }
+                                        
+                                        <div class="col-md-4 col-sm-6 mb-3">
+                                            <div class="form-check p-3 border rounded h-100 d-flex align-items-center bg-white">
+                                                <input class="form-check-input me-3" 
+                                                       type="radio" 
+                                                       name="selecciones[@i].CandidatoId" 
+                                                       id="ninguno_@puesto.Id" 
+                                                       value="" required> <label class="form-check-label text-muted" for="ninguno_@puesto.Id" style="cursor:pointer;">
+                                                    <strong>Voto en Blanco</strong><br />
+                                                    <span class="small">(Ninguna opcion)</span>
+                                                </label>
+                                            </div>
+                                        </div>
+                                    }
+                                    else
+                                    {
+                                        <div class="col-12 text-center text-muted py-3">
+                                            <em>No hay candidatos registrados para este puesto.</em>
+                                        </div>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                }
+            }
+            else
+            {
+                <div class="col-12">
+                    <div class="alert alert-warning text-center">
+                        No hay puestos electivos configurados para esta eleccion.
+                    </div>
+                </div>
+            }
+        </div>
+
+        <div class="row mt-4 mb-5">
+            <div class="col-12 text-center">
+                <button type="submit" class="btn btn-success btn-lg px-5 shadow" onclick="return confirm('¿Esta seguro de enviar su voto? Esta accion no se puede deshacer.');">
+                    <i class="bi bi-check-circle me-2"></i> Emitir Voto
+                </button>
+            </div>
+        </div>
+    </form>
+</div>

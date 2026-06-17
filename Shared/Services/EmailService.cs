@@ -45,8 +45,8 @@ namespace Shared.Services
             }
             catch (Exception ex)
             {
-                // El documento funcional pide un mensaje específico si falla el envío del código[cite: 1]
-                throw new Exception("No fue posible enviar el código de verificación. Intente nuevamente más tarde.", ex);
+                // Mensaje modificado sin tildes para evitar caracteres raros
+                throw new Exception("No fue posible enviar el codigo de verificacion. Intente nuevamente mas tarde.", ex);
             }
         }
     }

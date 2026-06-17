@@ -107,7 +107,7 @@
                                         </form>
                                     }
 
-                                    <a asp-action="Resultados" asp-route-id="@item.Id" asp-route-nombreEleccion="@item.Nombre" class="btn btn-primary btn-sm fw-bold text-white">
+                                    <a asp-controller="ResultadosElectorales" asp-action="Ver" asp-route-id="@item.Id" asp-route-nombreEleccion="@item.Nombre" class="btn btn-primary btn-sm fw-bold text-white">
                                         <i class="fas fa-chart-bar"></i> Resultados
                                     </a>
                                 </div>

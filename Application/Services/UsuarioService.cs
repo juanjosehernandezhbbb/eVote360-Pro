@@ -40,10 +40,23 @@ namespace Application.Services
                 NombreUsuario = usernameLimpio,
                 PasswordHash = HashearPassword(password),
                 Rol = dto.Rol,
-                Estado = true
+                Estado = true,
+                // CORRECCIÓN: Guardamos el ID en la tabla Usuario para que el Login lo reconozca
+                PartidoPoliticoId = (dto.Rol == (int)RolUsuario.DirigentePolitico) ? dto.PartidoPoliticoId : null
             };
 
             await _usuarioRepo.AddAsync(nuevoUsuario);
+
+            // Si es dirigente, creamos también la relación en la tabla DirigentePolitico
+            if (dto.Rol == (int)RolUsuario.DirigentePolitico && dto.PartidoPoliticoId.HasValue)
+            {
+                var nuevoDirigente = new DirigentePolitico
+                {
+                    UsuarioId = nuevoUsuario.Id,
+                    PartidoPoliticoId = dto.PartidoPoliticoId.Value
+                };
+                await _dirigenteRepo.AddAsync(nuevoDirigente);
+            }
         }
 
         public async Task ActualizarAsync(UsuarioDto dto, string? nuevaPassword)
@@ -60,6 +73,7 @@ namespace Application.Services
                 usuarioExistente.NombreUsuario = usernameLimpio;
             }
 
+            // Validacion original de cambio de rol
             if (usuarioExistente.Rol == (int)RolUsuario.DirigentePolitico && dto.Rol == (int)RolUsuario.Administrador)
             {
                 bool tienePartidoAsignado = await _dirigenteRepo.ExistsAsync(d => d.UsuarioId == dto.Id);
@@ -72,17 +86,39 @@ namespace Application.Services
             usuarioExistente.Rol = dto.Rol;
             usuarioExistente.Estado = dto.Estado;
 
+            // CORRECCIÓN: Sincronizamos el ID en el Usuario para evitar el error de NULL
+            usuarioExistente.PartidoPoliticoId = (dto.Rol == (int)RolUsuario.DirigentePolitico) ? dto.PartidoPoliticoId : null;
+
             if (!string.IsNullOrWhiteSpace(nuevaPassword))
             {
                 usuarioExistente.PasswordHash = HashearPassword(nuevaPassword);
             }
 
             await _usuarioRepo.UpdateAsync(usuarioExistente);
+
+            // Actualizar la relacion en la tabla Dirigente Politico
+            if (dto.Rol == (int)RolUsuario.DirigentePolitico && dto.PartidoPoliticoId.HasValue)
+            {
+                var todosLosDirigentes = await _dirigenteRepo.GetAllAsync();
+                var dirigenteExistente = todosLosDirigentes.FirstOrDefault(d => d.UsuarioId == dto.Id);
+
+                if (dirigenteExistente != null)
+                {
+                    dirigenteExistente.PartidoPoliticoId = dto.PartidoPoliticoId.Value;
+                    await _dirigenteRepo.UpdateAsync(dirigenteExistente);
+                }
+                else
+                {
+                    var nuevoDirigente = new DirigentePolitico
+                    {
+                        UsuarioId = dto.Id,
+                        PartidoPoliticoId = dto.PartidoPoliticoId.Value
+                    };
+                    await _dirigenteRepo.AddAsync(nuevoDirigente);
+                }
+            }
         }
 
-        // ===================================================================
-        // METODO CORREGIDO: CambiarEstadoAsync
-        // ===================================================================
         public async Task CambiarEstadoAsync(int id, bool nuevoEstado)
         {
             var usuarioExistente = await _usuarioRepo.GetByIdAsync(id);
@@ -92,14 +128,12 @@ namespace Application.Services
 
             if (!nuevoEstado)
             {
-                // 1. Validacion para Dirigentes Politicos
                 if (usuarioExistente.Rol == (int)RolUsuario.DirigentePolitico)
                 {
                     bool tienePartido = await _dirigenteRepo.ExistsAsync(d => d.UsuarioId == id);
                     if (tienePartido) throw new Exception("No se puede desactivar este dirigente porque tiene un partido politico asignado.");
                 }
 
-                // 2. Validacion para Administradores (Aqui estaba el error)
                 if (usuarioExistente.Rol == (int)RolUsuario.Administrador)
                 {
                     var adminsActivos = (await _usuarioRepo.GetAllAsync()).Count(u => u.Rol == (int)RolUsuario.Administrador && u.Estado == true);
@@ -122,7 +156,8 @@ namespace Application.Services
                 Email = u.Email,
                 NombreUsuario = u.NombreUsuario,
                 Rol = (int)u.Rol,
-                Estado = u.Estado
+                Estado = u.Estado,
+                PartidoPoliticoId = u.PartidoPoliticoId
             }).ToList();
         }
 
@@ -139,7 +174,8 @@ namespace Application.Services
                 Email = u.Email,
                 NombreUsuario = u.NombreUsuario,
                 Rol = u.Rol,
-                Estado = u.Estado
+                Estado = u.Estado,
+                PartidoPoliticoId = u.PartidoPoliticoId
             };
         }
 
@@ -160,7 +196,8 @@ namespace Application.Services
                 Id = usuario.Id,
                 Nombre = usuario.Nombre,
                 NombreUsuario = usuario.NombreUsuario,
-                Rol = usuario.Rol
+                Rol = usuario.Rol,
+                PartidoPoliticoId = usuario.PartidoPoliticoId // Pasamos este dato al DTO
             };
         }
 
